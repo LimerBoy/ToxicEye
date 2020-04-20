@@ -106,7 +106,7 @@ namespace TelegramRAT
                             "\n🚀 COMMUNICATION:" +
                             "\n /Speak <text>" +
                             "\n /Shell <command>" +
-                            "\n /MessageBox <error/info/warn> <text> <caption>" +
+                            "\n /MessageBox <error/info/warn> <text>" +
                             "\n /OpenURL <url>" +
                             "\n /SendKeyPress <keys>" +
                             "\n /ScanNetwork <to>" +
