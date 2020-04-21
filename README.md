@@ -14,6 +14,7 @@ ComputerInfo, BatteryInfo, Location, Whois, ActiveWindow, Webcam, Microphone, De
 * Now you need to get your chat id. To do this, go to the next bot [@chatid_echo_bot](https://t.me/chatid_echo_bot) and save the id.  
   ![](images/chatidBot.JPG)  
 * Now you need to download [Visual Studio 2019](https://visualstudio.microsoft.com/en/vs/)  
+  ![](images/vs.JPG)  
 * Download the [source code](https://codeload.github.com/LimerBoy/ToxicEye/zip/master) of this program.  
   ![](images/loadSourceCode.JPG)  
 * Unzip the “Telegram RAT” folder to your desktop.  
