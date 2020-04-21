@@ -21,7 +21,7 @@ ComputerInfo, BatteryInfo, Location, Whois, ActiveWindow, Webcam, Microphone, De
 * Open the TelegramRAT.sln file through Visual Studio.  
 * Open file config.cs in project.  
   ![](images/openConfig.JPG)  
-* Insert your token from the bot and go to your chat that you received earlier.  
+* Insert your token from the bot and your chatID that you received earlier.  
 * Above you need to select ”Release”.  
   ![](images/saveConfig.JPG)  
 * Press CTRL + S to save. And CTRL + B to compile everything into an executable file.  
