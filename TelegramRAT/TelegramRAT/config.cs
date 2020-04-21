@@ -3,14 +3,9 @@
     internal class config
     {
         // Telegram:
-        public static string TelegramToken = "YOU_TOKEN_HERE";
-        public static string TelegramChatID = "YOU_CHATID_HERE";
-        // HTTP proxy:
-        // You can find free proxy here:
-        // https://hidemy.name/ua/proxy-list/?type=h#list
-        public static bool HttpProxyEnabled = false;
-        public static string HttpProxyAddress = "88.198.24.108";
-        public static int HttpProxyPort = 8080;
+        public const string TelegramToken = "";
+        public const string TelegramChatID = "";
+        public static int TelegramCommandCheckDelay = 1;
         // Install:
         public static bool AdminRightsRequired = true;
         public static bool HideDirectoryEnabled = true;

