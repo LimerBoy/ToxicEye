@@ -59,7 +59,7 @@
     <Compile Include="config.cs" />
     <Compile Include="core\commands.cs" />
     <Compile Include="core\core.cs" />
-    <Compile Include="core\persistense.cs" />
+    <Compile Include="core\persistence.cs" />
     <Compile Include="core\SimpleJSON.cs" />
     <Compile Include="core\stealer\Bookmarks.cs" />
     <Compile Include="core\stealer\Cookies.cs" />

