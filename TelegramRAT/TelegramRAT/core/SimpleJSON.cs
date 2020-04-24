@@ -1,3 +1,11 @@
+/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https:github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
 using System;
 using System.Collections;
 using System.Collections.Generic;

