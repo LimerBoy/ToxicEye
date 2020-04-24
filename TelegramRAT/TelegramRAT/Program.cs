@@ -15,7 +15,6 @@ namespace TelegramRAT
     class Program
     {
         [STAThreadAttribute]
-        [Obsolete]
         static void Main(string[] args)
         {
             // Hide console

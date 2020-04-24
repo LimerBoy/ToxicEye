@@ -172,7 +172,7 @@ namespace TelegramRAT
                             "\n👾 Protection:" +
                             "\nInstalled antivirus: " + persistence.DetectAntivirus() +
                             "\nStarted as admin: " + utils.IsAdministrator() +
-                            "\nProcess protected: " + (config.ProcessProtectionEnabled && utils.IsAdministrator()) +
+                            "\nProcess protected: " + (config.ProcessBSODProtectionEnabled && utils.IsAdministrator()) +
                             "\n" +
                             "\n👽 Virtualizaion:" +
                             "\nDebugger: " + persistence.inDebugger() +

