@@ -1,4 +1,4 @@
-# :trident: ToxicEye
+# :trident: ToxicEye (RAT + STEALER + CLIPPER)
 Program for remote control of windows computers via telegram bot. Written in C#  
 
 <p align="center">
